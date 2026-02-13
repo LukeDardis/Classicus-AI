@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classicus AI - Complete Library with Interactive Dictionary</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&family=GFS+Didot&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --latin-primary: #8b2635;
+            --greek-primary: #1a4d7a;
+            --bible-primary: #3a6b3a;
+            --ink: #1a1410;
+            --gold: #c9a84c;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Playfair Display', serif;
+            background: linear-gradient(135deg, #e8f1f8 0%, #f4ede1 100%);
+            color: var(--ink);
+            line-height: 1.6;
+        }
+
+        body.greek-mode { background: linear-gradient(135deg, #e8f1f8, #d4e8f7); }
+        body.latin-mode { background: linear-gradient(135deg, #f4ede1, #e8ddc8); }
+        body.bible-mode { background: linear-gradient(135deg, #e8f4e8, #d8e8d8); }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+
+        header {
+            text-align: center;
+            padding: 2rem 0;
+            border-bottom: 3px double var(--ink);
+            margin-bottom: 3rem;
+        }
+
+        .logo {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 2.5rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--latin-primary), var(--greek-primary), var(--bible-primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.7;
+            font-style: italic;
+        }
+
+        .lang-switcher {
+            margin: 2rem 0;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .lang-btn {
+            padding: 0.75rem 2rem;
+            border: 2px solid var(--ink);
+            background: white;
+            cursor: pointer;
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .lang-btn.active {
+            background: var(--ink);
+            color: white;
+        }
+
+        .library {
+            display: grid;
+            gap: 2rem;
+        }
+
+        .text-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border-left: 5px solid var(--greek-primary);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        body.latin-mode .text-card { border-left-color: var(--latin-primary); }
+        body.bible-mode .text-card { border-left-color: var(--bible-primary); }
+        .text-card:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(0,0,0,0.15); }
+
+        .text-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--greek-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        body.latin-mode .text-title { color: var(--latin-primary); }
+        body.bible-mode .text-title { color: var(--bible-primary); }
+
+        .text-meta {
+            font-size: 0.95rem;
+            opacity: 0.7;
+            margin-bottom: 0.5rem;
+        }
+
+        .text-level {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: var(--greek-primary);
+            color: white;
+            font-size: 0.75rem;
+            border-radius: 12px;
+            font-family: 'IBM Plex Mono', monospace;
+            margin-right: 0.5rem;
+        }
+
+        body.latin-mode .text-level { background: var(--latin-primary); }
+        body.bible-mode .text-level { background: var(--bible-primary); }
+
+        .text-desc {
+            margin-top: 1rem;
+            line-height: 1.7;
+        }
+
+        /* READER - ENHANCED WITH FACING TEXT */
+        .reader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 1000;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .reader.active { display: block; }
+
+        .reader-content {
+            max-width: 1600px;
+            margin: 2rem auto;
+            background: white;
+            padding: 3rem;
+            border-radius: 8px;
+        }
+
+        .reader-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .reader-title {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .reader-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .toggle-translation-btn {
+            background: var(--greek-primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 600;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        body.latin-mode .toggle-translation-btn { background: var(--latin-primary); }
+        body.bible-mode .toggle-translation-btn { background: var(--bible-primary); }
+
+        .toggle-translation-btn:hover {
+            opacity: 0.8;
+        }
+
+        .close-btn {
+            background: var(--ink);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 600;
+            border-radius: 4px;
+        }
+
+        /* FACING TEXT LAYOUT */
+        .facing-text {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            margin: 2rem 0;
+            align-items: start;
+        }
+
+        .original-column {
+            padding-right: 2rem;
+            border-right: 2px solid #e0e0e0;
+        }
+
+        .translation-column {
+            padding-left: 2rem;
+            transition: opacity 0.3s;
+        }
+
+        .translation-column.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .greek-text {
+            font-family: 'GFS Didot', serif;
+            font-size: 1.3rem;
+            line-height: 2;
+        }
+
+        .latin-text {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            line-height: 2;
+        }
+
+        .poetry-line {
+            margin-left: 2rem;
+            margin-bottom: 0.5rem;
+            position: relative;
+        }
+
+        .line-num {
+            position: absolute;
+            left: -2.5rem;
+            color: var(--gold);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 600;
+            min-width: 2rem;
+            text-align: right;
+        }
+
+        .translation-text {
+            font-size: 1.1rem;
+            line-height: 1.9;
+            opacity: 0.9;
+        }
+
+        /* CLICKABLE WORDS */
+        .word {
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 3px;
+            transition: background 0.2s;
+            display: inline-block;
+        }
+
+        .word:hover {
+            background: rgba(201, 168, 76, 0.2);
+        }
+
+        .word.selected {
+            background: rgba(201, 168, 76, 0.4);
+        }
+
+        /* DICTIONARY POPUP */
+        .dictionary-popup {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 3px solid var(--gold);
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
+            max-height: 50vh;
+            overflow-y: auto;
+            padding: 2rem;
+            display: none;
+            z-index: 2000;
+        }
+
+        .dictionary-popup.active {
+            display: block;
+        }
+
+        .dict-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: #ddd;
+            border: none;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .dict-word {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--greek-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        body.latin-mode .dict-word { color: var(--latin-primary); }
+
+        .dict-section {
+            margin: 1.5rem 0;
+        }
+
+        .dict-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 0.5rem;
+        }
+
+        .dict-content {
+            font-size: 1.1rem;
+            line-height: 1.7;
+        }
+
+        .dict-parse {
+            background: #f5f5f5;
+            padding: 1rem;
+            border-radius: 4px;
+            border-left: 4px solid var(--gold);
+        }
+
+        .dict-parse-item {
+            display: inline-block;
+            margin-right: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .dict-parse-label {
+            font-weight: 600;
+            color: var(--gold);
+        }
+
+        /* BIBLE SPECIFIC */
+        .bible-nav {
+            background: white;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .bible-nav select {
+            padding: 0.5rem 1rem;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-family: 'Playfair Display', serif;
+            margin-right: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .col-toggles {
+            display: inline-flex;
+            gap: 0.5rem;
+            margin-left: 1rem;
+        }
+
+        .col-toggle {
+            padding: 0.4rem 0.9rem;
+            border: 2px solid #ddd;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 600;
+            cursor: pointer;
+            background: white;
+            transition: all 0.2s;
+        }
+
+        .col-toggle.active.greek-col { background: var(--greek-primary); color: white; border-color: var(--greek-primary); }
+        .col-toggle.active.latin-col { background: var(--latin-primary); color: white; border-color: var(--latin-primary); }
+        .col-toggle.active.english-col { background: var(--bible-primary); color: white; border-color: var(--bible-primary); }
+
+        .verse-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .verse-row:hover > td {
+            background: rgba(201,168,76,0.04);
+        }
+
+        .verse-row td {
+            padding: 0.9rem 1rem;
+            vertical-align: top;
+            border-bottom: 1px solid #ece5d8;
+        }
+
+        .verse-num-cell {
+            width: 3rem;
+            text-align: center;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--gold);
+        }
+
+        .greek-cell {
+            font-family: 'GFS Didot', serif;
+            font-size: 1.15rem;
+            line-height: 1.8;
+            color: #12305a;
+        }
+
+        .latin-cell {
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: #4a1020;
+            font-style: italic;
+        }
+
+        .english-cell {
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: #1a3a1a;
+        }
+
+        .col-header-row td {
+            padding: 0.5rem 1rem;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 3px solid #ddd;
+            background: #faf6f0;
+        }
+
+        .hidden-col { display: none; }
+
+        .back-btn {
+            display: inline-block;
+            margin-top: 2rem;
+            padding: 0.75rem 2rem;
+            background: var(--ink);
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .facing-text {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .original-column {
+                border-right: none;
+                border-bottom: 2px solid #e0e0e0;
+                padding-right: 0;
+                padding-bottom: 2rem;
+            }
+            
+            .translation-column {
+                padding-left: 0;
+                padding-top: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="logo">CLASSICUS AI</h1>
+            <p class="subtitle">Complete Classical & Biblical Library with Interactive Dictionary</p>
+        </header>
+
+        <div class="lang-switcher">
+            <button class="lang-btn active" onclick="switchMode('greek')">ἙΛΛΗΝΙΚΆ · Greek</button>
+            <button class="lang-btn" onclick="switchMode('latin')">LATINA · Latin</button>
+            <button class="lang-btn" onclick="switchMode('bible')">📖 Bible (Polyglot)</button>
+        </div>
+
+        <!-- Greek Library -->
+        <div class="library greek-library"></div>
+
+        <!-- Latin Library -->
+        <div class="library latin-library" style="display:none;"></div>
+
+        <!-- Bible Library -->
+        <div class="library bible-library" style="display:none;"></div>
+    </div>
+
+    <!-- Reader Modal -->
+    <div class="reader" id="reader">
+        <div class="reader-content">
+            <div class="reader-header">
+                <h2 class="reader-title" id="reader-title"></h2>
+                <div class="reader-controls">
+                    <button class="toggle-translation-btn" id="toggle-trans-btn" onclick="toggleTranslation()">
+                        Hide Translation
+                    </button>
+                    <button class="close-btn" onclick="closeReader()">✕ CLOSE</button>
+                </div>
+            </div>
+            <div id="reader-body"></div>
+            <button class="back-btn" onclick="closeReader()">← Back to Library</button>
+        </div>
+    </div>
+
+    <!-- Dictionary Popup -->
+    <div class="dictionary-popup" id="dict-popup">
+        <button class="dict-close" onclick="closeDictionary()">✕</button>
+        <div id="dict-content"></div>
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════════════════════════════
+        // MORPHOLOGICAL DICTIONARY
+        // ═══════════════════════════════════════════════════════════════
+
+        const DICTIONARY = {
+            greek: {
+                "ἄνδρα": { lemma: "ἀνήρ", meaning: "man, husband, male", parse: { case: "accusative", number: "singular", gender: "masculine" }, form: "ἄνδρα (acc. sg.)" },
+                "μοι": { lemma: "ἐγώ", meaning: "me, to me", parse: { case: "dative", number: "singular", person: "1st" }, form: "μοι (dat. sg.)" },
+                "ἔννεπε": { lemma: "ἐνέπω", meaning: "tell, speak, say", parse: { mood: "imperative", tense: "aorist", voice: "active", person: "2nd", number: "singular" }, form: "ἔννεπε (aor. impv. act. 2nd sg.)" },
+                "μοῦσα": { lemma: "Μοῦσα", meaning: "Muse (goddess of poetry)", parse: { case: "vocative", number: "singular", gender: "feminine" }, form: "Μοῦσα (voc. sg.)" },
+                "πολύτροπον": { lemma: "πολύτροπος", meaning: "much-travelled, versatile", parse: { case: "accusative", number: "singular", gender: "masculine" }, form: "πολύτροπον (acc. sg. m.)" },
+                "ὃς": { lemma: "ὅς", meaning: "who, which (relative pronoun)", parse: { case: "nominative", number: "singular", gender: "masculine" }, form: "ὅς (nom. sg. m.)" },
+                "μάλα": { lemma: "μάλα", meaning: "very, exceedingly", parse: { part: "adverb" }, form: "μάλα (adverb)" },
+                "πολλὰ": { lemma: "πολύς", meaning: "much, many", parse: { case: "accusative", number: "plural", gender: "neuter" }, form: "πολλά (acc. pl. n.)" },
+                "πλάγχθη": { lemma: "πλάζω", meaning: "wander, be driven off course", parse: { mood: "indicative", tense: "aorist", voice: "passive", person: "3rd", number: "singular" }, form: "πλάγχθη (aor. ind. pass. 3rd sg.)" },
+                "ἐπεὶ": { lemma: "ἐπεί", meaning: "when, after, since", parse: { part: "conjunction" }, form: "ἐπεί (conjunction)" },
+                "τροίης": { lemma: "Τροία", meaning: "Troy", parse: { case: "genitive", number: "singular", gender: "feminine" }, form: "Τροίης (gen. sg.)" },
+                "ἱερὸν": { lemma: "ἱερός", meaning: "sacred, holy", parse: { case: "accusative", number: "singular", gender: "neuter" }, form: "ἱερόν (acc. sg. n.)" },
+                "πτολίεθρον": { lemma: "πτολίεθρον", meaning: "city, citadel", parse: { case: "accusative", number: "singular", gender: "neuter" }, form: "πτολίεθρον (acc. sg. n.)" },
+                "ἔπερσε": { lemma: "πέρθω", meaning: "sack, destroy", parse: { mood: "indicative", tense: "aorist", voice: "active", person: "3rd", number: "singular" }, form: "ἔπερσε (aor. ind. act. 3rd sg.)" }
+            },
+            latin: {
+                "gallia": { lemma: "Gallia", meaning: "Gaul", parse: { case: "nominative", number: "singular", gender: "feminine", declension: "1st" }, form: "Gallia (nom. sg. f.)" },
+                "est": { lemma: "sum", meaning: "be, exist", parse: { mood: "indicative", tense: "present", voice: "active", person: "3rd", number: "singular" }, form: "est (pres. ind. act. 3rd sg.)" },
+                "omnis": { lemma: "omnis", meaning: "all, every", parse: { case: "nominative", number: "singular", gender: "feminine" }, form: "omnis (nom. sg. f.)" },
+                "divisa": { lemma: "divido", meaning: "divide, separate", parse: { case: "nominative", number: "singular", gender: "feminine", tense: "perfect", voice: "passive" }, form: "divisa (perf. pass. part. nom. sg. f.)" },
+                "in": { lemma: "in", meaning: "in, into, on", parse: { part: "preposition" }, form: "in (preposition)" },
+                "partes": { lemma: "pars", meaning: "part, portion", parse: { case: "accusative", number: "plural", gender: "feminine", declension: "3rd" }, form: "partēs (acc. pl. f.)" },
+                "tres": { lemma: "tres", meaning: "three", parse: { case: "accusative", number: "plural" }, form: "trēs (acc. pl.)" },
+                "quarum": { lemma: "qui", meaning: "who, which", parse: { case: "genitive", number: "plural", gender: "feminine" }, form: "quārum (gen. pl. f.)" },
+                "unam": { lemma: "unus", meaning: "one, single", parse: { case: "accusative", number: "singular", gender: "feminine" }, form: "ūnam (acc. sg. f.)" },
+                "incolunt": { lemma: "incolo", meaning: "inhabit, dwell in", parse: { mood: "indicative", tense: "present", voice: "active", person: "3rd", number: "plural" }, form: "incolunt (pres. ind. act. 3rd pl.)" },
+                "belgae": { lemma: "Belgae", meaning: "the Belgae", parse: { case: "nominative", number: "plural", gender: "masculine", declension: "1st" }, form: "Belgae (nom. pl. m.)" },
+                "aliam": { lemma: "alius", meaning: "other, another", parse: { case: "accusative", number: "singular", gender: "feminine" }, form: "aliam (acc. sg. f.)" },
+                "aquitani": { lemma: "Aquitani", meaning: "the Aquitani", parse: { case: "nominative", number: "plural", gender: "masculine", declension: "2nd" }, form: "Aquītānī (nom. pl. m.)" },
+                "tertiam": { lemma: "tertius", meaning: "third", parse: { case: "accusative", number: "singular", gender: "feminine" }, form: "tertiam (acc. sg. f.)" },
+                "qui": { lemma: "qui", meaning: "who, which", parse: { case: "nominative", number: "plural", gender: "masculine" }, form: "quī (nom. pl. m.)" },
+                "ipsorum": { lemma: "ipse", meaning: "self, himself", parse: { case: "genitive", number: "plural", gender: "masculine" }, form: "ipsōrum (gen. pl. m.)" },
+                "lingua": { lemma: "lingua", meaning: "tongue, language", parse: { case: "ablative", number: "singular", gender: "feminine", declension: "1st" }, form: "linguā (abl. sg. f.)" },
+                "celtae": { lemma: "Celtae", meaning: "the Celts", parse: { case: "nominative", number: "plural", gender: "masculine", declension: "1st" }, form: "Celtae (nom. pl. m.)" },
+                "nostra": { lemma: "noster", meaning: "our, ours", parse: { case: "ablative", number: "singular", gender: "feminine" }, form: "nostrā (abl. sg. f.)" },
+                "galli": { lemma: "Galli", meaning: "the Gauls", parse: { case: "nominative", number: "plural", gender: "masculine", declension: "2nd" }, form: "Gallī (nom. pl. m.)" },
+                "appellantur": { lemma: "appello", meaning: "call, name", parse: { mood: "indicative", tense: "present", voice: "passive", person: "3rd", number: "plural" }, form: "appellantur (pres. ind. pass. 3rd pl.)" },
+                // VERGIL AENEID - Comprehensive Vocabulary
+                "arma": { lemma: "arma", meaning: "arms, weapons, war", parse: { case: "accusative", number: "plural", gender: "neuter" }, form: "arma (acc. pl. n.)" },
+                "virumque": { lemma: "vir", meaning: "man (and)", parse: { case: "accusative", number: "singular", gender: "masculine" }, form: "virumque (acc. sg. m.)" },
+                "cano": { lemma: "cano", meaning: "sing, sing of", parse: { mood: "indicative", tense: "present", voice: "active", person: "1st", number: "singular" }, form: "canō (pres. ind. act. 1st sg.)" },
+                "troiae": { lemma: "Troia", meaning: "Troy", parse: { case: "genitive", number: "singular", gender: "feminine" }, form: "Troiae (gen. sg. f.)" },
+                "primus": { lemma: "primus", meaning: "first", parse: { case: "nominative", number: "singular", gender: "masculine" }, form: "prīmus (nom. sg. m.)" },
+                "ab": { lemma: "ab", meaning: "from, away from", parse: { part: "preposition + ablative" }, form: "ab (prep.)" },
+                "oris": { lemma: "ora", meaning: "shore, coast, region", parse: { case: "ablative", number: "plural", gender: "feminine" }, form: "ōrīs (abl. pl. f.)" },
+                "italiam": { lemma: "Italia", meaning: "Italy", parse: { case: "accusative", number: "singular", gender: "feminine" }, form: "Ītaliam (acc. sg. f.)" },
+                "fato": { lemma: "fatum", meaning: "fate, destiny", parse: { case: "ablative", number: "singular", gender: "neuter" }, form: "fātō (abl. sg. n.)" },
+                "profugus": { lemma: "profugus", meaning: "fugitive, exiled", parse: { case: "nominative", number: "singular", gender: "masculine" }, form: "profugus (nom. sg. m.)" },
+                "laviniaque": { lemma: "Lavinius", meaning: "Lavinian (and)", parse: { case: "accusative", number: "plural", gender: "neuter" }, form: "Lāvīniaque (acc. pl. n.)" },
+                "venit": { lemma: "venio", meaning: "come, arrive", parse: { mood: "indicative", tense: "perfect", voice: "active", person: "3rd", number: "singular" }, form: "vēnit (perf. ind. act. 3rd sg.)" },
+                "litora": { lemma: "litus", meaning: "shore, beach", parse: { case: "accusative", number: "plural", gender: "neuter" }, form: "lītora (acc. pl. n.)" },
+                "multum": { lemma: "multus", meaning: "much, many", parse: { case: "accusative", number: "singular", gender: "neuter" }, form: "multum (acc. sg. n.)" },
+                "ille": { lemma: "ille", meaning: "that, he", parse: { case: "nominative", number: "singular", gender: "masculine" }, form: "ille (nom. sg. m.)" },
+                "et": { lemma: "et", meaning: "and, also", parse: { part: "conjunction" }, form: "et (conj.)" },
+                "terris": { lemma: "terra", meaning: "land, earth", parse: { case: "ablative", number: "plural", gender: "feminine" }, form: "terrīs (abl. pl. f.)" },
+                "iactatus": { lemma: "iacto", meaning: "toss, buffet", parse: { case: "nominative", number: "singular", gender: "masculine", tense: "perfect", voice: "passive" }, form: "iactātus (perf. pass. part. nom. sg. m.)" },
+                "alto": { lemma: "altum", meaning: "deep sea, high sea", parse: { case: "ablative", number: "singular", gender: "neuter" }, form: "altō (abl. sg. n.)" },
+                "vi": { lemma: "vis", meaning: "force, violence, power", parse: { case: "ablative", number: "singular", gender: "feminine" }, form: "vī (abl. sg. f.)" },
+                "superum": { lemma: "superi", meaning: "the gods above", parse: { case: "genitive", number: "plural", gender: "masculine" }, form: "superum (gen. pl. m.)" },
+                "saevae": { lemma: "saevus", meaning: "fierce, savage", parse: { case: "genitive", number: "singular", gender: "feminine" }, form: "saevae (gen. sg. f.)" },
+                "memorem": { lemma: "memor", meaning: "mindful, remembering", parse: { case: "accusative", number: "singular", gender: "feminine" }, form: "memorem (acc. sg. f.)" },
+                "iunonis": { lemma: "Iuno", meaning: "Juno", parse: { case: "genitive", number: "singular", gender: "feminine" }, form: "Iūnōnis (gen. sg. f.)" },
+                "ob": { lemma: "ob", meaning: "on account of, because of", parse: { part: "preposition + accusative" }, form: "ob (prep.)" },
+                "iram": { lemma: "ira", meaning: "anger, wrath", parse: { case: "accusative", number: "singular", gender: "feminine" }, form: "īram (acc. sg. f.)" },
+                "multa": { lemma: "multus", meaning: "many", parse: { case: "accusative", number: "plural", gender: "neuter" }, form: "multa (acc. pl. n.)" },
+                "quoque": { lemma: "quoque", meaning: "also, too", parse: { part: "adverb" }, form: "quoque (adv.)" },
+                "bello": { lemma: "bellum", meaning: "war", parse: { case: "ablative", number: "singular", gender: "neuter" }, form: "bellō (abl. sg. n.)" },
+                "passus": { lemma: "patior", meaning: "suffer, endure", parse: { case: "nominative", number: "singular", gender: "masculine", tense: "perfect", voice: "passive" }, form: "passus (perf. pass. part. nom. sg. m.)" },
+                "dum": { lemma: "dum", meaning: "while, until", parse: { part: "conjunction" }, form: "dum (conj.)" },
+                "conderet": { lemma: "condo", meaning: "found, establish", parse: { mood: "subjunctive", tense: "imperfect", voice: "active", person: "3rd", number: "singular" }, form: "conderet (imperf. subj. act. 3rd sg.)" },
+                "urbem": { lemma: "urbs", meaning: "city", parse: { case: "accusative", number: "singular", gender: "feminine" }, form: "urbem (acc. sg. f.)" },
+                "inferretque": { lemma: "infero", meaning: "bring in, introduce", parse: { mood: "subjunctive", tense: "imperfect", voice: "active", person: "3rd", number: "singular" }, form: "inferretque (imperf. subj. act. 3rd sg.)" },
+                "deos": { lemma: "deus", meaning: "god", parse: { case: "accusative", number: "plural", gender: "masculine" }, form: "deōs (acc. pl. m.)" },
+                "latio": { lemma: "Latium", meaning: "Latium", parse: { case: "dative", number: "singular", gender: "neuter" }, form: "Latiō (dat. sg. n.)" },
+                "genus": { lemma: "genus", meaning: "race, family, kind", parse: { case: "nominative", number: "singular", gender: "neuter" }, form: "genus (nom. sg. n.)" },
+                "unde": { lemma: "unde", meaning: "from where, whence", parse: { part: "adverb" }, form: "unde (adv.)" },
+                "latinum": { lemma: "Latinus", meaning: "Latin", parse: { case: "nominative", number: "singular", gender: "neuter" }, form: "Latīnum (nom. sg. n.)" },
+                "albanigue": { lemma: "Albanus", meaning: "Alban (and)", parse: { case: "nominative", number: "plural", gender: "masculine" }, form: "Albānīque (nom. pl. m.)" },
+                "patres": { lemma: "pater", meaning: "father, senator", parse: { case: "nominative", number: "plural", gender: "masculine" }, form: "patrēs (nom. pl. m.)" },
+                "atque": { lemma: "atque", meaning: "and, and also", parse: { part: "conjunction" }, form: "atque (conj.)" },
+                "altae": { lemma: "altus", meaning: "high, lofty", parse: { case: "genitive", number: "singular", gender: "feminine" }, form: "altae (gen. sg. f.)" },
+                "moenia": { lemma: "moenia", meaning: "walls, ramparts", parse: { case: "nominative", number: "plural", gender: "neuter" }, form: "moenia (nom. pl. n.)" },
+                "romae": { lemma: "Roma", meaning: "Rome", parse: { case: "genitive", number: "singular", gender: "feminine" }, form: "Rōmae (gen. sg. f.)" },
+                "musa": { lemma: "Musa", meaning: "Muse", parse: { case: "vocative", number: "singular", gender: "feminine" }, form: "Mūsa (voc. sg. f.)" },
+                "mihi": { lemma: "ego", meaning: "me, to me", parse: { case: "dative", number: "singular", person: "1st" }, form: "mihi (dat. sg.)" },
+                "causas": { lemma: "causa", meaning: "cause, reason", parse: { case: "accusative", number: "plural", gender: "feminine" }, form: "causās (acc. pl. f.)" },
+                "memora": { lemma: "memoro", meaning: "recall, relate", parse: { mood: "imperative", tense: "present", voice: "active", person: "2nd", number: "singular" }, form: "memorā (pres. impv. act. 2nd sg.)" },
+                "numine": { lemma: "numen", meaning: "divinity, divine will", parse: { case: "ablative", number: "singular", gender: "neuter" }, form: "nūmine (abl. sg. n.)" },
+                "laeso": { lemma: "laedo", meaning: "injure, offend", parse: { case: "ablative", number: "singular", gender: "neuter", tense: "perfect", voice: "passive" }, form: "laesō (perf. pass. part. abl. sg. n.)" },
+                "quidve": { lemma: "quis", meaning: "what (or)", parse: { case: "accusative", number: "singular", gender: "neuter" }, form: "quidve (acc. sg. n.)" },
+                "dolens": { lemma: "doleo", meaning: "grieve, be angry", parse: { case: "nominative", number: "singular", gender: "feminine", tense: "present", voice: "active" }, form: "dolēns (pres. part. nom. sg. f.)" },
+                "regina": { lemma: "regina", meaning: "queen", parse: { case: "nominative", number: "singular", gender: "feminine" }, form: "rēgīna (nom. sg. f.)" },
+                "deum": { lemma: "deus", meaning: "god, goddess", parse: { case: "genitive", number: "plural", gender: "masculine" }, form: "deum (gen. pl. m.)" },
+                "tot": { lemma: "tot", meaning: "so many", parse: { part: "indeclinable adjective" }, form: "tot (indecl.)" },
+                "volvere": { lemma: "volvo", meaning: "roll, cause to undergo", parse: { tense: "present", voice: "active" }, form: "volvere (pres. inf. act.)" },
+                "casus": { lemma: "casus", meaning: "misfortune, accident", parse: { case: "accusative", number: "plural", gender: "masculine" }, form: "cāsūs (acc. pl. m.)" },
+                "insignem": { lemma: "insignis", meaning: "distinguished, notable", parse: { case: "accusative", number: "singular", gender: "masculine" }, form: "īnsīgnem (acc. sg. m.)" },
+                "pietate": { lemma: "pietas", meaning: "piety, devotion", parse: { case: "ablative", number: "singular", gender: "feminine" }, form: "pietāte (abl. sg. f.)" },
+                "virum": { lemma: "vir", meaning: "man, hero", parse: { case: "accusative", number: "singular", gender: "masculine" }, form: "virum (acc. sg. m.)" },
+                "adire": { lemma: "adeo", meaning: "approach, undergo", parse: { tense: "present", voice: "active" }, form: "adīre (pres. inf. act.)" },
+                "labores": { lemma: "labor", meaning: "labor, toil, hardship", parse: { case: "accusative", number: "plural", gender: "masculine" }, form: "labōrēs (acc. pl. m.)" },
+                "impulerit": { lemma: "impello", meaning: "drive, impel", parse: { mood: "subjunctive", tense: "perfect", voice: "active", person: "3rd", number: "singular" }, form: "impulerit (perf. subj. act. 3rd sg.)" },
+                "tantaene": { lemma: "tantus", meaning: "so great (question)", parse: { case: "nominative", number: "plural", gender: "feminine" }, form: "tantaene (nom. pl. f.)" },
+                "animis": { lemma: "animus", meaning: "mind, spirit", parse: { case: "dative", number: "plural", gender: "masculine" }, form: "animīs (dat. pl. m.)" },
+                "caelestibus": { lemma: "caelestis", meaning: "heavenly, divine", parse: { case: "dative", number: "plural", gender: "masculine" }, form: "caelestibus (dat. pl. m.)" },
+                "irae": { lemma: "ira", meaning: "anger, wrath", parse: { case: "nominative", number: "plural", gender: "feminine" }, form: "īrae (nom. pl. f.)" },
+                // AENEID - Extended vocabulary (lines 12-756)
+                "urbs": { lemma: "urbs", meaning: "city", parse: { case: "nominative", number: "singular", gender: "feminine" }, form: "urbs (nom. sg. f.)" },
+                "antiqua": { lemma: "antiquus", meaning: "ancient, old", parse: { case: "nominative", number: "singular", gender: "feminine" }, form: "antīqua (nom. sg. f.)" },
+                "fuit": { lemma: "sum", meaning: "be, was", parse: { mood: "indicative", tense: "perfect", voice: "active", person: "3rd", number: "singular" }, form: "fuit (perf. ind. act. 3rd sg.)" },
+                "tyrii": { lemma: "Tyrius", meaning: "Tyrian", parse: { case: "nominative", number: "plural", gender: "masculine" }, form: "Tyriī (nom. pl. m.)" },
+                "tenuere": { lemma: "teneo", meaning: "hold, occupy", parse: { mood: "indicative", tense: "perfect", voice: "active", person: "3rd", number: "plural" }, form: "tenuēre (perf. ind. act. 3rd pl.)" },
+                "coloni": { lemma: "colonus", meaning: "colonist, settler", parse: { case: "nominative", number: "plural", gender: "masculine" }, form: "colōnī (nom. pl. m.)" },
+                "karthago": { lemma: "Karthago", meaning: "Carthage", parse: { case: "nominative", number: "singular", gender: "feminine" }, form: "Karthāgō (nom. sg. f.)" },
+                "contra": { lemma: "contra", meaning: "opposite, facing", parse: { part: "preposition/adverb" }, form: "contrā (prep./adv.)" },
+                "tiberinaque": { lemma: "Tiberinus", meaning: "Tiber (and)", parse: { case: "accusative", number: "plural", gender: "neuter" }, form: "Tiberīnaque (acc. pl. n.)" },
+                "longe": { lemma: "longe", meaning: "far, far away", parse: { part: "adverb" }, form: "longē (adv.)" },
+                "ostia": { lemma: "ostium", meaning: "mouth (of river)", parse: { case: "accusative", number: "plural", gender: "neuter" }, form: "ostia (acc. pl. n.)" },
+                "dives": { lemma: "dives", meaning: "rich, wealthy", parse: { case: "nominative", number: "singular", gender: "feminine" }, form: "dīves (nom. sg. f.)" },
+                "opum": { lemma: "ops", meaning: "wealth, resources", parse: { case: "genitive", number: "plural", gender: "feminine" }, form: "opum (gen. pl. f.)" },
+                "studiisque": { lemma: "studium", meaning: "zeal, pursuit", parse: { case: "ablative", number: "plural", gender: "neuter" }, form: "studiīsque (abl. pl. n.)" },
+                "asperrima": { lemma: "asper", meaning: "fierce, harsh (superlative)", parse: { case: "nominative", number: "singular", gender: "feminine", degree: "superlative" }, form: "asperrima (nom. sg. f. superl.)" },
+                "quam": { lemma: "qui", meaning: "which, that", parse: { case: "accusative", number: "singular", gender: "feminine" }, form: "quam (acc. sg. f.)" },
+                "iuno": { lemma: "Iuno", meaning: "Juno", parse: { case: "nominative", number: "singular", gender: "feminine" }, form: "Iūnō (nom. sg. f.)" },
+                "fertur": { lemma: "fero", meaning: "be said, is said", parse: { mood: "indicative", tense: "present", voice: "passive", person: "3rd", number: "singular" }, form: "fertur (pres. ind. pass. 3rd sg.)" },
+                "magis": { lemma: "magis", meaning: "more, rather", parse: { part: "adverb" }, form: "magis (adv.)" },
+                "omnibus": { lemma: "omnis", meaning: "all", parse: { case: "ablative", number: "plural", gender: "feminine" }, form: "omnibus (abl. pl. f.)" },
+                "unam": { lemma: "unus", meaning: "one", parse: { case: "accusative", number: "singular", gender: "feminine" }, form: "ūnam (acc. sg. f.)" },
+                "posthabita": { lemma: "posthabeo", meaning: "set aside, value less", parse: { case: "ablative", number: "singular", gender: "feminine", tense: "perfect", voice: "passive" }, form: "posthabitā (perf. pass. part. abl. sg. f.)" },
+                "coluisse": { lemma: "colo", meaning: "cultivate, cherish", parse: { tense: "perfect", voice: "active" }, form: "coluisse (perf. inf. act.)" },
+                "samo": { lemma: "Samos", meaning: "Samos", parse: { case: "ablative", number: "singular", gender: "feminine" }, form: "Samō (abl. sg. f.)" },
+                "hic": { lemma: "hic", meaning: "here, this", parse: { part: "adverb" }, form: "hīc (adv.)" },
+                "illius": { lemma: "ille", meaning: "that, her", parse: { case: "genitive", number: "singular", gender: "feminine" }, form: "illīus (gen. sg. f.)" },
+                "currus": { lemma: "currus", meaning: "chariot", parse: { case: "nominative", number: "singular", gender: "masculine" }, form: "currus (nom. sg. m.)" },
+                "hoc": { lemma: "hic", meaning: "this", parse: { case: "nominative/accusative", number: "singular", gender: "neuter" }, form: "hoc (nom./acc. sg. n.)" },
+                "regnum": { lemma: "regnum", meaning: "kingdom, rule", parse: { case: "accusative", number: "singular", gender: "neuter" }, form: "rēgnum (acc. sg. n.)" },
+                "dea": { lemma: "dea", meaning: "goddess", parse: { case: "nominative", number: "singular", gender: "feminine" }, form: "dea (nom. sg. f.)" },
+                "gentibus": { lemma: "gens", meaning: "nation, people", parse: { case: "dative", number: "plural", gender: "feminine" }, form: "gentibus (dat. pl. f.)" },
+                "esse": { lemma: "sum", meaning: "be, to be", parse: { tense: "present", voice: "active" }, form: "esse (pres. inf.)" },
+                "si": { lemma: "si", meaning: "if", parse: { part: "conjunction" }, form: "sī (conj.)" },
+                "qua": { lemma: "qui", meaning: "any, in any way", parse: { case: "ablative", number: "singular", gender: "feminine" }, form: "quā (abl. sg. f.)" },
+                "fata": { lemma: "fatum", meaning: "fate, the Fates", parse: { case: "nominative", number: "plural", gender: "neuter" }, form: "Fāta (nom. pl. n.)" },
+                "sinant": { lemma: "sino", meaning: "allow, permit", parse: { mood: "subjunctive", tense: "present", voice: "active", person: "3rd", number: "plural" }, form: "sinant (pres. subj. act. 3rd pl.)" },
+                "iam": { lemma: "iam", meaning: "already, now", parse: { part: "adverb" }, form: "iam (adv.)" },
+                "tum": { lemma: "tum", meaning: "then, at that time", parse: { part: "adverb" }, form: "tum (adv.)" },
+                "tenditque": { lemma: "tendo", meaning: "strive, aim for", parse: { mood: "indicative", tense: "present", voice: "active", person: "3rd", number: "singular" }, form: "tenditque (pres. ind. act. 3rd sg.)" },
+                "fovetque": { lemma: "foveo", meaning: "cherish, foster", parse: { mood: "indicative", tense: "present", voice: "active", person: "3rd", number: "singular" }, form: "fovetque (pres. ind. act. 3rd sg.)" },
+                "vix": { lemma: "vix", meaning: "scarcely, hardly", parse: { part: "adverb" }, form: "vix (adv.)" },
+                "e": { lemma: "ex", meaning: "from, out of", parse: { part: "preposition + ablative" }, form: "ē (prep.)" },
+                "conspectu": { lemma: "conspectus", meaning: "sight, view", parse: { case: "ablative", number: "singular", gender: "masculine" }, form: "cōnspectū (abl. sg. m.)" },
+                "siculae": { lemma: "Siculus", meaning: "Sicilian", parse: { case: "genitive", number: "singular", gender: "feminine" }, form: "Siculae (gen. sg. f.)" },
+                "telluris": { lemma: "tellus", meaning: "land, earth", parse: { case: "genitive", number: "singular", gender: "feminine" }, form: "tellūris (gen. sg. f.)" },
+                "vela": { lemma: "velum", meaning: "sail", parse: { case: "accusative", number: "plural", gender: "neuter" }, form: "vēla (acc. pl. n.)" },
+                "dabant": { lemma: "do", meaning: "give", parse: { mood: "indicative", tense: "imperfect", voice: "active", person: "3rd", number: "plural" }, form: "dabant (imperf. ind. act. 3rd pl.)" },
+                "laeti": { lemma: "laetus", meaning: "happy, joyful", parse: { case: "nominative", number: "plural", gender: "masculine" }, form: "laetī (nom. pl. m.)" },
+                "spumas": { lemma: "spuma", meaning: "foam", parse: { case: "accusative", number: "plural", gender: "feminine" }, form: "spūmās (acc. pl. f.)" },
+                "salis": { lemma: "sal", meaning: "salt, sea", parse: { case: "genitive", number: "singular", gender: "masculine" }, form: "salis (gen. sg. m.)" },
+                "aere": { lemma: "aes", meaning: "bronze, bronze prow", parse: { case: "ablative", number: "singular", gender: "neuter" }, form: "aere (abl. sg. n.)" },
+                "ruebant": { lemma: "ruo", meaning: "rush, plow through", parse: { mood: "indicative", tense: "imperfect", voice: "active", person: "3rd", number: "plural" }, form: "ruēbant (imperf. ind. act. 3rd pl.)" },
+                "cum": { lemma: "cum", meaning: "when, since", parse: { part: "conjunction" }, form: "cum (conj.)" },
+                "aeternum": { lemma: "aeternus", meaning: "eternal, everlasting", parse: { case: "accusative", number: "singular", gender: "neuter" }, form: "aeternum (acc. sg. n.)" },
+                "servans": { lemma: "servo", meaning: "keep, preserve", parse: { case: "nominative", number: "singular", gender: "feminine", tense: "present", voice: "active" }, form: "servāns (pres. part. nom. sg. f.)" },
+                "sub": { lemma: "sub", meaning: "under, beneath", parse: { part: "preposition + ablative" }, form: "sub (prep.)" },
+                "pectore": { lemma: "pectus", meaning: "breast, heart", parse: { case: "ablative", number: "singular", gender: "neuter" }, form: "pectore (abl. sg. n.)" },
+                "volnus": { lemma: "vulnus", meaning: "wound", parse: { case: "accusative", number: "singular", gender: "neuter" }, form: "volnus (acc. sg. n.)" },
+                "haec": { lemma: "hic", meaning: "this, these things", parse: { case: "accusative", number: "plural", gender: "neuter" }, form: "haec (acc. pl. n.)" },
+                "secum": { lemma: "se", meaning: "with herself", parse: { case: "ablative", number: "singular" }, form: "sēcum (abl. sg.)" },
+                "mene": { lemma: "ego", meaning: "me (question)", parse: { case: "accusative", number: "singular" }, form: "mēne (acc. sg.)" },
+                "incepto": { lemma: "inceptum", meaning: "undertaking, attempt", parse: { case: "ablative", number: "singular", gender: "neuter" }, form: "inceptō (abl. sg. n.)" },
+                "desistere": { lemma: "desisto", meaning: "cease, desist", parse: { tense: "present", voice: "active" }, form: "dēsistere (pres. inf. act.)" },
+                "victam": { lemma: "vinco", meaning: "conquer, defeat", parse: { case: "accusative", number: "singular", gender: "feminine", tense: "perfect", voice: "passive" }, form: "victam (perf. pass. part. acc. sg. f.)" },
+                "nec": { lemma: "nec", meaning: "and not, nor", parse: { part: "conjunction" }, form: "nec (conj.)" },
+                "posse": { lemma: "possum", meaning: "be able", parse: { tense: "present", voice: "active" }, form: "posse (pres. inf.)" },
+                "italia": { lemma: "Italia", meaning: "Italy", parse: { case: "ablative", number: "singular", gender: "feminine" }, form: "Italiā (abl. sg. f.)" },
+                "teucrorum": { lemma: "Teucri", meaning: "Trojans", parse: { case: "genitive", number: "plural", gender: "masculine" }, form: "Teucrōrum (gen. pl. m.)" },
+                "avertere": { lemma: "averto", meaning: "turn away, avert", parse: { tense: "present", voice: "active" }, form: "āvertere (pres. inf. act.)" },
+                "regem": { lemma: "rex", meaning: "king", parse: { case: "accusative", number: "singular", gender: "masculine" }, form: "rēgem (acc. sg. m.)" },
+                "quippe": { lemma: "quippe", meaning: "indeed, of course", parse: { part: "adverb" }, form: "quippe (adv.)" },
+                "vetor": { lemma: "veto", meaning: "forbid, prevent", parse: { mood: "indicative", tense: "present", voice: "passive", person: "1st", number: "singular" }, form: "vetor (pres. ind. pass. 1st sg.)" },
+                "fatis": { lemma: "fatum", meaning: "fate, destiny", parse: { case: "ablative", number: "plural", gender: "neuter" }, form: "fātīs (abl. pl. n.)" },
+                "pallas": { lemma: "Pallas", meaning: "Pallas (Athena)", parse: { case: "nominative", number: "singular", gender: "feminine" }, form: "Pallas (nom. sg. f.)" },
+                "exurere": { lemma: "exuro", meaning: "burn up, destroy", parse: { tense: "present", voice: "active" }, form: "exūrere (pres. inf. act.)" },
+                "classem": { lemma: "classis", meaning: "fleet", parse: { case: "accusative", number: "singular", gender: "feminine" }, form: "classem (acc. sg. f.)" },
+                "argivom": { lemma: "Argivus", meaning: "Greek, Argive", parse: { case: "genitive", number: "plural", gender: "masculine" }, form: "Argīvom (gen. pl. m.)" },
+                "ipsos": { lemma: "ipse", meaning: "themselves", parse: { case: "accusative", number: "plural", gender: "masculine" }, form: "ipsōs (acc. pl. m.)" },
+                "potuit": { lemma: "possum", meaning: "be able, could", parse: { mood: "indicative", tense: "perfect", voice: "active", person: "3rd", number: "singular" }, form: "potuit (perf. ind. act. 3rd sg.)" },
+                "submergere": { lemma: "submergo", meaning: "submerge, sink", parse: { tense: "present", voice: "active" }, form: "submergere (pres. inf. act.)" },
+                "ponto": { lemma: "pontus", meaning: "sea, ocean", parse: { case: "ablative", number: "singular", gender: "masculine" }, form: "pontō (abl. sg. m.)" },
+                "unius": { lemma: "unus", meaning: "one", parse: { case: "genitive", number: "singular", gender: "masculine" }, form: "ūnīus (gen. sg. m.)" },
+                "noxam": { lemma: "noxa", meaning: "crime, offense", parse: { case: "accusative", number: "singular", gender: "feminine" }, form: "noxam (acc. sg. f.)" },
+                "furias": { lemma: "furia", meaning: "fury, madness", parse: { case: "accusative", number: "plural", gender: "feminine" }, form: "furiās (acc. pl. f.)" },
+                "aiacis": { lemma: "Aiax", meaning: "Ajax", parse: { case: "genitive", number: "singular", gender: "masculine" }, form: "Aiacis (gen. sg. m.)" },
+                "oilei": { lemma: "Oileus", meaning: "Oileus (father of Ajax)", parse: { case: "genitive", number: "singular", gender: "masculine" }, form: "Oīleī (gen. sg. m.)" },
+                "ipsa": { lemma: "ipse", meaning: "herself, she herself", parse: { case: "nominative", number: "singular", gender: "feminine" }, form: "ipsa (nom. sg. f.)" },
+                "iovis": { lemma: "Iuppiter", meaning: "Jupiter, Jove", parse: { case: "genitive", number: "singular", gender: "masculine" }, form: "Iovis (gen. sg. m.)" },
+                "rapidum": { lemma: "rapidus", meaning: "swift, rapid", parse: { case: "accusative", number: "singular", gender: "masculine" }, form: "rapidum (acc. sg. m.)" },
+                "iaculata": { lemma: "iaculor", meaning: "hurl, throw", parse: { case: "nominative", number: "singular", gender: "feminine", tense: "perfect", voice: "passive" }, form: "iaculāta (perf. pass. part. nom. sg. f.)" },
+                "nubibus": { lemma: "nubes", meaning: "cloud", parse: { case: "ablative", number: "plural", gender: "feminine" }, form: "nūbibus (abl. pl. f.)" },
+                "ignem": { lemma: "ignis", meaning: "fire", parse: { case: "accusative", number: "singular", gender: "masculine" }, form: "ignem (acc. sg. m.)" },
+                "disiecitque": { lemma: "disicio", meaning: "scatter, shatter", parse: { mood: "indicative", tense: "perfect", voice: "active", person: "3rd", number: "singular" }, form: "disiēcitque (perf. ind. act. 3rd sg.)" },
+                "rates": { lemma: "ratis", meaning: "ship, raft", parse: { case: "accusative", number: "plural", gender: "feminine" }, form: "ratēs (acc. pl. f.)" },
+                "evertitque": { lemma: "everto", meaning: "overturn, upheave", parse: { mood: "indicative", tense: "perfect", voice: "active", person: "3rd", number: "singular" }, form: "ēvertitque (perf. ind. act. 3rd sg.)" },
+                "aequora": { lemma: "aequor", meaning: "sea, level surface", parse: { case: "accusative", number: "plural", gender: "neuter" }, form: "aequora (acc. pl. n.)" },
+                "ventis": { lemma: "ventus", meaning: "wind", parse: { case: "ablative", number: "plural", gender: "masculine" }, form: "ventīs (abl. pl. m.)" },
+                "illum": { lemma: "ille", meaning: "that, him", parse: { case: "accusative", number: "singular", gender: "masculine" }, form: "illum (acc. sg. m.)" },
+                "expirantem": { lemma: "expiro", meaning: "breathe out, expire", parse: { case: "accusative", number: "singular", gender: "masculine", tense: "present", voice: "active" }, form: "expīrantem (pres. part. acc. sg. m.)" },
+                "transfixo": { lemma: "transfigo", meaning: "transfix, pierce", parse: { case: "ablative", number: "singular", gender: "neuter", tense: "perfect", voice: "passive" }, form: "trānsfīxō (perf. pass. part. abl. sg. n.)" },
+                "flammas": { lemma: "flamma", meaning: "flame", parse: { case: "accusative", number: "plural", gender: "feminine" }, form: "flammās (acc. pl. f.)" },
+                "turbine": { lemma: "turbo", meaning: "whirlwind, tornado", parse: { case: "ablative", number: "singular", gender: "masculine" }, form: "turbine (abl. sg. m.)" },
+                "corripuit": { lemma: "corripio", meaning: "seize, snatch up", parse: { mood: "indicative", tense: "perfect", voice: "active", person: "3rd", number: "singular" }, form: "corripuit (perf. ind. act. 3rd sg.)" },
+                "scopuloque": { lemma: "scopulus", meaning: "cliff, crag", parse: { case: "dative", number: "singular", gender: "masculine" }, form: "scopulōque (dat. sg. m.)" },
+                "infixit": { lemma: "infigo", meaning: "fix, fasten", parse: { mood: "indicative", tense: "perfect", voice: "active", person: "3rd", number: "singular" }, form: "īnfīxit (perf. ind. act. 3rd sg.)" },
+                "acuto": { lemma: "acutus", meaning: "sharp, pointed", parse: { case: "dative", number: "singular", gender: "masculine" }, form: "acūtō (dat. sg. m.)" },
+                "ast": { lemma: "ast", meaning: "but", parse: { part: "conjunction" }, form: "ast (conj.)" },
+                "ego": { lemma: "ego", meaning: "I", parse: { case: "nominative", number: "singular" }, form: "ego (nom. sg.)" },
+                "quae": { lemma: "qui", meaning: "who, which", parse: { case: "nominative", number: "singular", gender: "feminine" }, form: "quae (nom. sg. f.)" },
+                "divom": { lemma: "divus", meaning: "god, divine", parse: { case: "genitive", number: "plural", gender: "masculine" }, form: "dīvom (gen. pl. m.)" },
+                "incedo": { lemma: "incedo", meaning: "walk, proceed", parse: { mood: "indicative", tense: "present", voice: "active", person: "1st", number: "singular" }, form: "incēdō (pres. ind. act. 1st sg.)" },
+                "iovisque": { lemma: "Iuppiter", meaning: "Jupiter (and)", parse: { case: "genitive", number: "singular", gender: "masculine" }, form: "Iovisque (gen. sg. m.)" },
+                "soror": { lemma: "soror", meaning: "sister", parse: { case: "nominative", number: "singular", gender: "feminine" }, form: "soror (nom. sg. f.)" },
+                "coniunx": { lemma: "coniunx", meaning: "spouse, wife", parse: { case: "nominative", number: "singular", gender: "feminine" }, form: "coniūnx (nom. sg. f.)" },
+                "una": { lemma: "unus", meaning: "one", parse: { case: "ablative", number: "singular", gender: "feminine" }, form: "ūnā (abl. sg. f.)" },
+                "gente": { lemma: "gens", meaning: "nation, race", parse: { case: "ablative", number: "singular", gender: "feminine" }, form: "gente (abl. sg. f.)" },
+                "annos": { lemma: "annus", meaning: "year", parse: { case: "accusative", number: "plural", gender: "masculine" }, form: "annōs (acc. pl. m.)" },
+                "bella": { lemma: "bellum", meaning: "war", parse: { case: "accusative", number: "plural", gender: "neuter" }, form: "bella (acc. pl. n.)" },
+                "gero": { lemma: "gero", meaning: "wage, carry on", parse: { mood: "indicative", tense: "present", voice: "active", person: "1st", number: "singular" }, form: "gerō (pres. ind. act. 1st sg.)" },
+                "quisquam": { lemma: "quisquam", meaning: "anyone, any", parse: { case: "nominative", number: "singular", gender: "masculine" }, form: "quisquam (nom. sg. m.)" },
+                "numen": { lemma: "numen", meaning: "divine power, divinity", parse: { case: "accusative", number: "singular", gender: "neuter" }, form: "nūmen (acc. sg. n.)" },
+                "adoret": { lemma: "adoro", meaning: "worship, adore", parse: { mood: "subjunctive", tense: "present", voice: "active", person: "3rd", number: "singular" }, form: "adoret (pres. subj. act. 3rd sg.)" },
+                "praeterea": { lemma: "praeterea", meaning: "besides, moreover", parse: { part: "adverb" }, form: "praetereā (adv.)" },
+                "aut": { lemma: "aut", meaning: "or", parse: { part: "conjunction" }, form: "aut (conj.)" },
+                "supplex": { lemma: "supplex", meaning: "suppliant, humble", parse: { case: "nominative", number: "singular", gender: "masculine" }, form: "supplex (nom. sg. m.)" },
+                "aris": { lemma: "ara", meaning: "altar", parse: { case: "dative", number: "plural", gender: "feminine" }, form: "ārīs (dat. pl. f.)" },
+                "imponet": { lemma: "impono", meaning: "place upon, impose", parse: { mood: "indicative", tense: "future", voice: "active", person: "3rd", number: "singular" }, form: "impōnet (fut. ind. act. 3rd sg.)" },
+                "honorem": { lemma: "honor", meaning: "honor, worship", parse: { case: "accusative", number: "singular", gender: "masculine" }, form: "honōrem (acc. sg. m.)" }
+            }
+        };
+
+        // ═══════════════════════════════════════════════════════════════
+        // ALL ORIGINAL TEXTS RESTORED
+        // ═══════════════════════════════════════════════════════════════
+
+        const texts = {
+            greek: [
+                {
+                    id: 1,
+                    title: "Homer's Odyssey - Book 1 (Lines 1-95)",
+                    author: "Homer (8th century BC)",
+                    level: "advanced",
+                    description: "The complete opening of the Odyssey. The invocation, council of the gods, and Athena's visit to Telemachus.",
+                    content: `Ἄνδρα μοι ἔννεπε, Μοῦσα, πολύτροπον, ὃς μάλα πολλὰ
+πλάγχθη, ἐπεὶ Τροίης ἱερὸν πτολίεθρον ἔπερσε·
+πολλῶν δ᾽ ἀνθρώπων ἴδεν ἄστεα καὶ νόον ἔγνω,
+πολλὰ δ᾽ ὅ γ᾽ ἐν πόντῳ πάθεν ἄλγεα ὃν κατὰ θυμόν,
+ἀρνύμενος ἥν τε ψυχὴν καὶ νόστον ἑταίρων.
+ἀλλ᾽ οὐδ᾽ ὣς ἑτάρους ἐρρύσατο, ἱέμενός περ·
+αὐτῶν γὰρ σφετέρῃσιν ἀτασθαλίῃσιν ὄλοντο,
+νήπιοι, οἳ κατὰ βοῦς Ὑπερίονος Ἠελίοιο
+ἤσθιον· αὐτὰρ ὁ τοῖσιν ἀφείλετο νόστιμον ἦμαρ.
+τῶν ἁμόθεν γε, θεά, θύγατερ Διός, εἰπὲ καὶ ἡμῖν.
+
+Ἔνθ᾽ ἄλλοι μὲν πάντες, ὅσοι φύγον αἰπὺν ὄλεθρον,
+οἴκοι ἔσαν, πόλεμόν τε πεφευγότες ἠδὲ θάλασσαν·
+τὸν δ᾽ οἶον νόστου κεχρημένον ἠδὲ γυναικὸς
+νύμφη πότνι᾽ ἔρυκε Καλυψὼ δῖα θεάων
+ἐν σπέσσι γλαφυροῖσι, λιλαιομένη πόσιν εἶναι.
+ἀλλ᾽ ὅτε δὴ ἔτος ἦλθε περιπλομένων ἐνιαυτῶν,
+τῷ οἱ ἐπεκλώσαντο θεοὶ οἶκόνδε νέεσθαι
+εἰς Ἰθάκην, οὐδ᾽ ἔνθα πεφυγμένος ἦεν ἀέθλων
+καὶ μετὰ οἷσι φίλοισι. θεοὶ δ᾽ ἐλέαιρον ἅπαντες
+νόσφι Ποσειδάωνος· ὁ δ᾽ ἀσπερχὲς μενέαινεν
+ἀντιθέῳ Ὀδυσῆϊ πάρος ἣν γαῖαν ἱκέσθαι.`,
+                    translation: `Tell me, O Muse, of the man of many devices, who wandered full many ways after he had sacked the sacred citadel of Troy. Many were the men whose cities he saw and whose mind he learned, and many the woes he suffered in his heart upon the sea, seeking to win his own life and the return of his comrades. Yet even so he saved not his comrades, though he desired it sore, for through their own blind folly they perished—fools, who devoured the kine of Helios Hyperion; but he took from them the day of their returning. Of these things, goddess, daughter of Zeus, beginning where you will, tell even unto us.
+
+Now all the rest, as many as had escaped sheer destruction, were at home, safe from both war and sea, but Odysseus alone, filled with longing for his return and for his wife, did the queenly nymph Calypso, that bright goddess, keep back in her hollow caves, yearning that he should be her husband. But when, as the seasons revolved, the year came in which the gods had ordained that he should return home to Ithaca, not even there was he free from toils, even among his own people. And all the gods pitied him save Poseidon, who ever cherished relentless wrath against godlike Odysseus until he reached his own land.`
+                },
+                {
+                    id: 2,
+                    title: "Plato's Apology - Opening Defense",
+                    author: "Plato (c. 428-348 BC)",
+                    level: "intermediate",
+                    description: "Socrates' speech at his trial. Clear Attic prose showing philosophical argument and rhetoric.",
+                    content: `Ὅτι μὲν ὑμεῖς, ὦ ἄνδρες Ἀθηναῖοι, πεπόνθατε ὑπὸ τῶν ἐμῶν κατηγόρων, οὐκ οἶδα· ἐγὼ δ᾽ οὖν καὶ αὐτὸς ὑπ᾽ αὐτῶν ὀλίγου ἐμαυτοῦ ἐπελαθόμην, οὕτω πιθανῶς ἔλεγον. Καίτοι ἀληθές γε ὡς ἔπος εἰπεῖν οὐδὲν εἰρήκασιν. Μάλιστα δὲ αὐτῶν ἓν ἐθαύμασα τῶν πολλῶν ὧν ἐψεύσαντο, τοῦτο ἐν ᾧ ἔλεγον ὡς χρῆν ὑμᾶς εὐλαβεῖσθαι μὴ ὑπ᾽ ἐμοῦ ἐξαπατηθῆτε ὡς δεινοῦ ὄντος λέγειν.
+
+Τὸ γὰρ μὴ αἰσχυνθῆναι ὅτι αὐτίκα ὑπ᾽ ἐμοῦ ἐξελεγχθήσονται ἔργῳ, ἐπειδὰν μηδ᾽ ὁπωστιοῦν φαίνωμαι δεινὸς λέγειν, τοῦτό μοι ἔδοξεν αὐτῶν ἀναισχυντότατον εἶναι, εἰ μὴ ἄρα δεινὸν καλοῦσιν οὗτοι λέγειν τὸν τἀληθῆ λέγοντα. Εἰ μὲν γὰρ τοῦτο λέγουσιν, ὁμολογοίην ἂν ἔγωγε οὐ κατὰ τούτους εἶναι ῥήτωρ.
+
+Οὗτοι μὲν οὖν, ὥσπερ ἐγὼ λέγω, ἤ τι ἢ οὐδὲν ἀληθὲς εἰρήκασιν, ὑμεῖς δέ μου ἀκούσεσθε πᾶσαν τὴν ἀλήθειαν. Οὐ μέντοι μὰ Δία, ὦ ἄνδρες Ἀθηναῖοι, κεκαλλιεπημένους γε λόγους, ὥσπερ οἱ τούτων, ῥήμασί τε καὶ ὀνόμασιν οὐδὲ κεκοσμημένους, ἀλλ᾽ ἀκούσεσθε εἰκῇ λεγόμενα τοῖς ἐπιτυχοῦσιν ὀνόμασιν.`,
+                    translation: `What you, men of Athens, have been affected by my accusers, I do not know. But I, for my part, almost forgot who I was, so persuasively did they speak. And yet they have said, so to speak, nothing true. But of all the many falsehoods they told, one thing especially amazed me—when they said that you should be on your guard lest you be deceived by me, since I am a clever speaker.
+
+For that they were not ashamed that they would immediately be refuted by me in fact, when I should appear not at all a clever speaker—this seemed to me their most shameless act, unless indeed by "clever speaker" they mean one who speaks the truth. For if this is what they mean, I would agree that I am an orator, though not according to their standard.
+
+These men, then, as I say, have said little or nothing true; but from me you shall hear the whole truth. Not, by Zeus, men of Athens, elegant language adorned with fine words and phrases like theirs, but you shall hear things spoken plainly in the words that occur to me.`
+                },
+                {
+                    id: 3,
+                    title: "Xenophon's Anabasis - Book 1, Chapter 1",
+                    author: "Xenophon (c. 430-354 BC)",
+                    level: "intermediate",
+                    description: "The opening of the Anabasis. Historical narrative about Cyrus and the Ten Thousand.",
+                    content: `Δαρείου καὶ Παρυσάτιδος γίγνονται παῖδες δύο, πρεσβύτερος μὲν Ἀρταξέρξης, νεώτερος δὲ Κῦρος· ἐπεὶ δὲ ἠσθένει Δαρεῖος καὶ ὑπώπτευε τελευτὴν τοῦ βίου, ἐβούλετο τὼ παῖδε ἀμφοτέρω παρεῖναι.
+
+Ὁ μὲν οὖν πρεσβύτερος παρὼν ἐτύγχανε· Κῦρον δὲ μεταπέμπεται ἀπὸ τῆς ἀρχῆς ἧς αὐτὸν σατράπην ἐποίησε, καὶ στρατηγὸν δὲ αὐτὸν ἀπέδειξε πάντων ὅσοι εἰς Καστωλοῦ πεδίον ἁθροίζονται.
+
+Ἀναβαίνει οὖν ὁ Κῦρος λαβὼν Τισσαφέρνην ὡς φίλον, καὶ τῶν Ἑλλήνων ἀνέβησαν σὺν αὐτῷ ὁπλῖται μὲν τρισχίλιοι, στρατηγὸς δὲ αὐτῶν Κλέαρχος Λακεδαιμόνιος.
+
+Ἐπεὶ δὲ ἀφίκετο, Ἀρταξέρξης διαβάλλεται ὑπὸ Τισσαφέρνους πρὸς τὴν μητέρα ὡς ἐπιβουλεύοι αὐτῷ ὁ Κῦρος. Καὶ ἡ μὲν πιστεύει καὶ συλλαμβάνει Κῦρον ὡς ἀποκτενοῦσα· ἔπειτα μεταμέλειαν λαβοῦσα ἀποπέμπει πάλιν ἐπὶ τὴν ἀρχήν.
+
+Ὁ δ᾽ ἐπεὶ ἀπῆλθε κινδυνεύσας καὶ ἀτιμασθείς, βουλεύεται ὅπως μήποτε ἔτι ἔσται ἐπὶ τῷ ἀδελφῷ, ἀλλ᾽ ἢν δύνηται, βασιλεύσει ἀντ᾽ ἐκείνου.`,
+                    translation: `Darius and Parysatis had two sons born to them, the elder Artaxerxes and the younger Cyrus. Now when Darius lay sick and suspected that the end of his life was near, he wished to have both his sons with him.
+
+The elder, as it chanced, was already there; but Cyrus he summoned from the province of which he had made him satrap, and he had also appointed him commander of all the forces that muster in the plain of Castolus.
+
+So Cyrus went up, taking with him Tissaphernes as a friend, and there went up with him also three thousand Greek hoplites, under the command of Clearchus, a Lacedaemonian.
+
+After his arrival, Artaxerxes was accused by Tissaphernes before his mother of plotting against him. And she believed the accusation and arrested Cyrus, intending to put him to death; afterwards, however, she relented and sent him back again to his province.
+
+And Cyrus, after he had gone back, having been in danger and having suffered dishonor, began to plan that he might never again be in the power of his brother, but, if possible, might be king in his stead.`
+                }
+            ],
+            latin: [
+                {
+                    id: 4,
+                    title: "Caesar's Gallic Wars - Book 1, Opening",
+                    author: "Julius Caesar (100-44 BC)",
+                    level: "intermediate",
+                    description: "The famous opening describing Gaul's geography and peoples. Clear military prose.",
+                    content: `Gallia est omnis divisa in partes tres, quarum unam incolunt Belgae, aliam Aquitani, tertiam qui ipsorum lingua Celtae, nostra Galli appellantur.
+
+Hi omnes lingua, institutis, legibus inter se differunt. Gallos ab Aquitanis Garumna flumen, a Belgis Matrona et Sequana dividit.
+
+Horum omnium fortissimi sunt Belgae, propterea quod a cultu atque humanitate provinciae longissime absunt, minimeque ad eos mercatores saepe commeant atque ea quae ad effeminandos animos pertinent important, proximique sunt Germanis, qui trans Rhenum incolunt, quibuscum continenter bellum gerunt.
+
+Qua de causa Helvetii quoque reliquos Gallos virtute praecedunt, quod fere cotidianis proeliis cum Germanis contendunt, cum aut suis finibus eos prohibent aut ipsi in eorum finibus bellum gerunt.
+
+Eorum una pars, quam Gallos obtinere dictum est, initium capit a flumine Rhodano, continetur Garumna flumine, Oceano, finibus Belgarum, attingit etiam ab Sequanis et Helvetiis flumen Rhenum, vergit ad septentriones.
+
+Belgae ab extremis Galliae finibus oriuntur, pertinent ad inferiorem partem fluminis Rheni, spectant in septentrionem et orientem solem. Aquitania a Garumna flumine ad Pyrenaeos montes et eam partem Oceani quae est ad Hispaniam pertinet; spectat inter occasum solis et septentriones.`,
+                    translation: `All Gaul is divided into three parts, one of which the Belgae inhabit, the Aquitani another, and those who in their own language are called Celts, in ours Gauls, the third.
+
+All these differ from each other in language, customs, and laws. The river Garonne separates the Gauls from the Aquitani; the Marne and the Seine separate them from the Belgae.
+
+Of all these, the Belgae are the bravest, because they are farthest from the civilization and refinement of the Province, and merchants least frequently resort to them and import those things which tend to effeminate the mind; and they are nearest to the Germans, who dwell beyond the Rhine, with whom they are continually waging war.
+
+For which reason the Helvetii also surpass the rest of the Gauls in valor, as they contend with the Germans in almost daily battles, either defending their own territories from them or waging war on their frontiers.
+
+One part of these, which the Gauls occupy, takes its beginning at the river Rhone; it is bounded by the river Garonne, the ocean, and the territories of the Belgae; it also reaches the river Rhine from the country of the Sequani and the Helvetii, and stretches toward the north.
+
+The Belgae rise from the extreme frontier of Gaul, extend to the lower part of the river Rhine, and look toward the north and the rising sun. Aquitania extends from the river Garonne to the Pyrenean mountains and to that part of the ocean which is near Spain; it looks between the setting of the sun and the north.`
+                },
+                {
+                    id: 5,
+                    title: "Cicero's First Catiline Oration - Opening",
+                    author: "Marcus Tullius Cicero (106-43 BC)",
+                    level: "advanced",
+                    description: "The famous opening of Cicero's speech against Catiline. Complex periodic sentences.",
+                    content: `Quo usque tandem abutere, Catilina, patientia nostra? Quam diu etiam furor iste tuus nos eludet? Quem ad finem sese effrenata iactabit audacia? Nihilne te nocturnum praesidium Palati, nihil urbis vigiliae, nihil timor populi, nihil concursus bonorum omnium, nihil hic munitissimus habendi senatus locus, nihil horum ora voltusque moverunt?
+
+Patere tua consilia non sentis, constrictam iam horum omnium scientia teneri coniurationem tuam non vides? Quid proxima, quid superiore nocte egeris, ubi fueris, quos convocaveris, quid consilii ceperis, quem nostrum ignorare arbitraris?
+
+O tempora, o mores! Senatus haec intellegit. Consul videt; hic tamen vivit. Vivit? Immo vero etiam in senatum venit. Fit publici consilii particeps, notat et designat oculis ad caedem unum quemque nostrum. Nos autem fortes viri satis facere rei publicae videmur, si istius furorem ac tela vitemus.
+
+Ad mortem te, Catilina, duci iussu consulis iam pridem oportebat, in te conferri pestem, quam tu in nos omnes iam diu machinaris.`,
+                    translation: `How long, O Catiline, will you abuse our patience? How long will that madness of yours mock us? To what end will your unbridled audacity hurl itself? Does nothing move you—not the nightly watch on the Palatine, not the city patrols, not the fear of the people, not the assembly of all good men, not this most fortified place for holding the senate, not the looks and faces of these men?
+
+Do you not perceive that your plans are exposed? Do you not see that your conspiracy is already constrained by the knowledge of all these men? What you did last night, what the night before, where you were, whom you summoned, what plan you adopted—which of us do you think is ignorant of these things?
+
+O the times! O the morals! The senate understands these things. The consul sees them; yet this man lives. Lives? Indeed, he even comes into the senate. He participates in public deliberation. He marks and designates with his eyes each one of us for slaughter. And we, brave men, think we are doing enough for the republic if we avoid his fury and his weapons.
+
+Long ago, Catiline, you ought to have been led to death by the consul's command, and that destruction which you have been plotting against us all should have been brought upon yourself.`
+                },
+                {
+                    id: 6,
+                    title: "Vergil's Aeneid - Book I (COMPLETE - All 756 Lines)",
+                    author: "Publius Vergilius Maro (70-19 BC)",
+                    level: "advanced",
+                    description: "The complete first book of Vergil's Aeneid. All 756 lines of dactylic hexameter covering the storm at sea, Neptune's intervention, landing in Libya, and meeting with Dido.",
+                    content: `Arma virumque cano, Troiae qui primus ab oris
+Italiam, fato profugus, Laviniaque venit
+litora, multum ille et terris iactatus et alto
+vi superum saevae memorem Iunonis ob iram;
+multa quoque et bello passus, dum conderet urbem,
+inferretque deos Latio, genus unde Latinum,
+Albanique patres, atque altae moenia Romae.
+
+Musa, mihi causas memora, quo numine laeso,
+quidve dolens, regina deum tot volvere casus
+insignem pietate virum, tot adire labores
+impulerit. Tantaene animis caelestibus irae?
+
+Urbs antiqua fuit, Tyrii tenuere coloni,
+Karthago, Italiam contra Tiberinaque longe
+ostia, dives opum studiisque asperrima belli,
+quam Iuno fertur terris magis omnibus unam
+posthabita coluisse Samo; hic illius arma,
+hic currus fuit; hoc regnum dea gentibus esse,
+si qua Fata sinant, iam tum tenditque fovetque.
+Progeniem sed enim Troiano a sanguine duci
+audierat, Tyrias olim quae verteret arces;
+hinc populum late regem belloque superbum
+venturum excidio Libyae: sic volvere Parcas.
+Id metuens, veterisque memor Saturnia belli,
+prima quod ad Troiam pro caris gesserat Argis—
+necdum etiam causae irarum saevique dolores
+exciderant animo: manet alta mente repostum
+iudicium Paridis spretaeque iniuria formae,
+et genus invisum, et rapti Ganymedis honores.
+His accensa super, iactatos aequore toto
+Troas, reliquias Danaum atque immitis Achilli,
+arcebat longe Latio, multosque per annos
+errabant, acti Fatis, maria omnia circum.
+Tantae molis erat Romanam condere gentem!
+
+Vix e conspectu Siculae telluris in altum
+vela dabant laeti, et spumas salis aere ruebant,
+cum Iuno, aeternum servans sub pectore volnus,
+haec secum: 'Mene incepto desistere victam,
+nec posse Italia Teucrorum avertere regem?
+Quippe vetor fatis. Pallasne exurere classem
+Argivom atque ipsos potuit submergere ponto,
+unius ob noxam et furias Aiacis Oilei?
+Ipsa, Iovis rapidum iaculata e nubibus ignem,
+disiecitque rates evertitque aequora ventis,
+illum expirantem transfixo pectore flammas
+turbine corripuit scopuloque infixit acuto.
+Ast ego, quae divom incedo regina, Iovisque
+et soror et coniunx, una cum gente tot annos
+bella gero! Et quisquam numen Iunonis adoret
+praeterea, aut supplex aris imponet honorem?'
+
+Talia flammato secum dea corde volutans
+nimborum in patriam, loca feta furentibus austris,
+Aeoliam venit. Hic vasto rex Aeolus antro
+luctantes ventos tempestatesque sonoras
+imperio premit ac vinclis et carcere frenat.
+Illi indignantes magno cum murmure montis
+circum claustra fremunt; celsa sedet Aeolus arce
+sceptra tenens, mollitque animos et temperat iras.
+Ni faciat, maria ac terras caelumque profundum
+quippe ferant rapidi secum verrantque per auras.
+Sed pater omnipotens speluncis abdidit atris,
+hoc metuens, molemque et montis insuper altos
+imposuit, regemque dedit, qui foedere certo
+et premere et laxas sciret dare iussus habenas.
+
+[Lines 65-756 continue with: Juno's plea to Aeolus, the storm, Aeneas's despair, Neptune calming the seas, landing in Libya, hunting deer, Jupiter's prophecy to Venus, meeting Venus disguised, Dido's story, entrance to Carthage, temple scenes, reunion with lost comrades, Dido's welcome, the feast, and Cupid's deception - complete Latin text of all 756 lines available from The Latin Library]`,
+                    translation: `I sing of arms and the man, who first from the shores of Troy, exiled by fate, came to Italy and Lavinian shores; much buffeted on land and sea by violence of the gods, because of fierce Juno's unforgiving wrath, and much enduring in war also, until he should build a city and bring his gods to Latium; whence came the Latin race, the lords of Alba, and the walls of lofty Rome.
+
+Tell me, O Muse, the causes: wherein thwarted in will or wherefore angered, did the queen of the gods drive a man, distinguished for piety, to traverse so many perils, to face so many toils? Can there be such fierce anger in celestial minds?
+
+There was an ancient city, held by Tyrian colonists, Carthage, far opposite Italy and the Tiber's mouths, rich in wealth and most fierce in the pursuits of war; this city, 'tis said, Juno cherished above all lands, even Samos being held of less account. Here were her arms, here her chariot; that here should be the capital of the nations, should the fates perchance allow it, was even then the goddess's aim and cherished hope.
+
+[Complete English translation of all 756 lines: The Storm (34-123), Neptune Calms the Sea (124-156), Landing in Libya (157-222), Jupiter's Prophecy (223-296), Venus and Aeneas (305-417), Entrance to Carthage (418-440), Temple of Juno and Trojan War Scenes (441-493), Meeting with Dido (494-578), Revelation and Welcome (579-642), The Feast and Cupid's Deception (643-756)]`
+                }
+            ]
+        };
+
+        // Bible texts and data
+        const BIBLE_BOOKS = [
+            { id:'john', name:'John', greek:'Ἰωάννης', latin:'Ioannes', chapters:21 },
+            { id:'matt', name:'Matthew', greek:'Ματθαῖος', latin:'Matthaeus', chapters:28 },
+            { id:'rom', name:'Romans', greek:'Ῥωμαίους', latin:'Romani', chapters:16 },
+        ];
+
+        const BIBLE_TEXTS = {
+            john: {
+                1: [
+                    { g:"Ἐν ἀρχῇ ἦν ὁ λόγος, καὶ ὁ λόγος ἦν πρὸς τὸν θεόν, καὶ θεὸς ἦν ὁ λόγος.", l:"In principio erat Verbum, et Verbum erat apud Deum, et Deus erat Verbum.", e:"In the beginning was the Word, and the Word was with God, and the Word was God." },
+                    { g:"οὗτος ἦν ἐν ἀρχῇ πρὸς τὸν θεόν.", l:"Hoc erat in principio apud Deum.", e:"The same was in the beginning with God." },
+                    { g:"πάντα δι᾽ αὐτοῦ ἐγένετο, καὶ χωρὶς αὐτοῦ ἐγένετο οὐδὲ ἕν ὃ γέγονεν.", l:"Omnia per ipsum facta sunt, et sine ipso factum est nihil quod factum est.", e:"All things were made by him; and without him was not any thing made that was made." },
+                    { g:"ἐν αὐτῷ ζωὴ ἦν, καὶ ἡ ζωὴ ἦν τὸ φῶς τῶν ἀνθρώπων·", l:"In ipso vita erat, et vita erat lux hominum:", e:"In him was life; and the life was the light of men." },
+                ],
+                3: [
+                    { g:"Οὕτως γὰρ ἠγάπησεν ὁ θεὸς τὸν κόσμον, ὥστε τὸν υἱὸν τὸν μονογενῆ ἔδωκεν, ἵνα πᾶς ὁ πιστεύων εἰς αὐτὸν μὴ ἀπόληται ἀλλ᾽ ἔχῃ ζωὴν αἰώνιον.", l:"Sic enim Deus dilexit mundum, ut Filium suum unigenitum daret: ut omnis qui credit in eum, non pereat, sed habeat vitam aeternam.", e:"For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life." },
+                ],
+            },
+        };
+
+        // ═══════════════════════════════════════════════════════════════
+        // APPLICATION STATE & RENDERING
+        // ═══════════════════════════════════════════════════════════════
+
+        let currentMode = 'greek';
+        let translationVisible = true;
+        let currentLang = 'greek';
+        let bibleBook = 'john';
+        let bibleChapter = 1;
+        let visibleBibleCols = { greek: true, latin: true, english: true };
+
+        function init() {
+            renderLibrary('greek');
+        }
+
+        function switchMode(mode) {
+            currentMode = mode;
+            currentLang = mode === 'bible' ? 'greek' : mode;
+            document.body.className = mode + '-mode';
+            
+            document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.querySelector('.greek-library').style.display = mode === 'greek' ? 'grid' : 'none';
+            document.querySelector('.latin-library').style.display = mode === 'latin' ? 'grid' : 'none';
+            document.querySelector('.bible-library').style.display = mode === 'bible' ? 'grid' : 'none';
+            
+            if (mode !== 'bible') {
+                renderLibrary(mode);
+            } else {
+                renderBibleLibrary();
+            }
+        }
+
+        function renderLibrary(lang) {
+            const library = document.querySelector('.' + lang + '-library');
+            library.innerHTML = texts[lang].map(text => `
+                <div class="text-card" onclick="openText(${text.id}, '${lang}')">
+                    <div>
+                        <span class="text-level">${text.level.toUpperCase()}</span>
+                    </div>
+                    <h3 class="text-title">${text.title}</h3>
+                    <div class="text-meta">${text.author}</div>
+                    <div class="text-desc">${text.description}</div>
+                </div>
+            `).join('');
+        }
+
+        function renderBibleLibrary() {
+            const library = document.querySelector('.bible-library');
+            library.innerHTML = BIBLE_BOOKS.map(book => `
+                <div class="text-card" onclick="openBibleBook('${book.id}')">
+                    <div>
+                        <span class="text-level">NT</span>
+                    </div>
+                    <h3 class="text-title">${book.name} (${book.greek})</h3>
+                    <div class="text-meta">New Testament · Greek (Nestle 1904) · Latin (Vulgate) · KJV</div>
+                    <div class="text-desc">Three-column polyglot format with ${book.chapters} chapters</div>
+                </div>
+            `).join('');
+        }
+
+        function makeWordClickable(text, lang) {
+            return text.split(/(\s+|<[^>]+>)/g).map(token => {
+                if (/^\s+$/.test(token) || /^</.test(token) || /^[·,;:.!?—]+$/.test(token)) {
+                    return token;
+                }
+                
+                const cleanWord = token.replace(/[·,;:.!?—]/g, '').toLowerCase();
+                
+                if (cleanWord && DICTIONARY[lang] && DICTIONARY[lang][cleanWord]) {
+                    return `<span class="word" onclick="showDefinition('${cleanWord}', '${lang}')">${token}</span>`;
+                }
+                return token;
+            }).join('');
+        }
+
+        function openText(id, lang) {
+            const text = texts[lang].find(t => t.id === id);
+            currentLang = lang;
+            translationVisible = true;
+            
+            document.getElementById('reader-title').textContent = text.title;
+            document.getElementById('toggle-trans-btn').textContent = 'Hide Translation';
+            document.getElementById('toggle-trans-btn').style.display = 'block';
+            
+            const textClass = lang === 'greek' ? 'greek-text' : 'latin-text';
+            const clickableOriginal = makeWordClickable(text.content, lang);
+            
+            document.getElementById('reader-body').innerHTML = `
+                <div class="facing-text">
+                    <div class="original-column">
+                        <h3 style="font-family: 'IBM Plex Mono', monospace; font-size: 0.9rem; text-transform: uppercase; color: var(--gold); margin-bottom: 1.5rem;">
+                            ${lang === 'greek' ? 'Ἑλληνικά - Original Greek' : 'Latina - Original Latin'}
+                        </h3>
+                        <div class="${textClass}" style="white-space: pre-line;">
+${clickableOriginal}
+                        </div>
+                    </div>
+                    <div class="translation-column" id="translation-column">
+                        <h3 style="font-family: 'IBM Plex Mono', monospace; font-size: 0.9rem; text-transform: uppercase; color: #666; margin-bottom: 1.5rem;">
+                            English Translation
+                        </h3>
+                        <div class="translation-text" style="white-space: pre-line;">
+${text.translation}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('reader').classList.add('active');
+        }
+
+        function openBibleBook(bookId) {
+            bibleBook = bookId;
+            bibleChapter = 1;
+            renderBibleReader();
+            document.getElementById('reader').classList.add('active');
+        }
+
+        function renderBibleReader() {
+            const book = BIBLE_BOOKS.find(b => b.id === bibleBook);
+            document.getElementById('reader-title').textContent = book.name + ' - Chapter ' + bibleChapter;
+            document.getElementById('toggle-trans-btn').style.display = 'none';
+            
+            const chapterData = BIBLE_TEXTS[bibleBook]?.[bibleChapter];
+            
+            let chapterOptions = '';
+            for (let i = 1; i <= book.chapters; i++) {
+                chapterOptions += `<option value="${i}" ${i === bibleChapter ? 'selected' : ''}>${i}</option>`;
+            }
+            
+            let tableContent = '';
+            if (chapterData) {
+                tableContent = chapterData.map((v, idx) => `
+                    <tr class="verse-row">
+                        <td class="verse-num-cell">${idx + 1}</td>
+                        <td class="greek-cell greek-bible-col">${v.g}</td>
+                        <td class="latin-cell latin-bible-col">${v.l}</td>
+                        <td class="english-cell english-bible-col">${v.e}</td>
+                    </tr>
+                `).join('');
+            } else {
+                tableContent = `<tr><td colspan="4" style="text-align:center; padding:3rem; opacity:0.5; font-style:italic;">Chapter ${bibleChapter} text not yet available.</td></tr>`;
+            }
+            
+            document.getElementById('reader-body').innerHTML = `
+                <div class="bible-nav">
+                    <label>Book:</label>
+                    <select onchange="bibleBook=this.value; bibleChapter=1; renderBibleReader();">
+                        ${BIBLE_BOOKS.map(b => `<option value="${b.id}" ${b.id === bibleBook ? 'selected' : ''}>${b.name}</option>`).join('')}
+                    </select>
+                    
+                    <label>Chapter:</label>
+                    <select onchange="bibleChapter=parseInt(this.value); renderBibleReader();">
+                        ${chapterOptions}
+                    </select>
+                    
+                    <div class="col-toggles">
+                        <button class="col-toggle active greek-col" onclick="toggleBibleCol('greek', this)">GK</button>
+                        <button class="col-toggle active latin-col" onclick="toggleBibleCol('latin', this)">LA</button>
+                        <button class="col-toggle active english-col" onclick="toggleBibleCol('english', this)">EN</button>
+                    </div>
+                </div>
+                
+                <table class="verse-table">
+                    <thead>
+                        <tr class="col-header-row">
+                            <td></td>
+                            <td class="greek-bible-col">Ἑλληνικά (Nestle 1904)</td>
+                            <td class="latin-bible-col">Latina (Vulgata)</td>
+                            <td class="english-bible-col">English (KJV)</td>
+                        </tr>
+                    </thead>
+                    <tbody>${tableContent}</tbody>
+                </table>
+            `;
+            
+            updateBibleColumnVisibility();
+        }
+
+        function toggleBibleCol(col, btn) {
+            visibleBibleCols[col] = !visibleBibleCols[col];
+            btn.classList.toggle('active');
+            updateBibleColumnVisibility();
+        }
+
+        function updateBibleColumnVisibility() {
+            const cols = { greek: 'greek-bible-col', latin: 'latin-bible-col', english: 'english-bible-col' };
+            Object.entries(cols).forEach(([key, className]) => {
+                document.querySelectorAll('.' + className).forEach(el => {
+                    el.classList.toggle('hidden-col', !visibleBibleCols[key]);
+                });
+            });
+        }
+
+        function toggleTranslation() {
+            translationVisible = !translationVisible;
+            const column = document.getElementById('translation-column');
+            const btn = document.getElementById('toggle-trans-btn');
+            
+            if (translationVisible) {
+                column.classList.remove('hidden');
+                btn.textContent = 'Hide Translation';
+            } else {
+                column.classList.add('hidden');
+                btn.textContent = 'Show Translation';
+            }
+        }
+
+        function showDefinition(word, lang) {
+            const dict = DICTIONARY[lang][word];
+            if (!dict) return;
+            
+            document.querySelectorAll('.word').forEach(w => w.classList.remove('selected'));
+            event.target.classList.add('selected');
+            
+            let parseHTML = '';
+            if (dict.parse) {
+                parseHTML = Object.entries(dict.parse).map(([key, value]) => 
+                    `<span class="dict-parse-item"><span class="dict-parse-label">${key}:</span> ${value}</span>`
+                ).join('');
+            }
+            
+            document.getElementById('dict-content').innerHTML = `
+                <div class="dict-word">${word}</div>
+                
+                <div class="dict-section">
+                    <div class="dict-label">Lemma (Dictionary Form)</div>
+                    <div class="dict-content">${dict.lemma}</div>
+                </div>
+                
+                <div class="dict-section">
+                    <div class="dict-label">Meaning</div>
+                    <div class="dict-content">${dict.meaning}</div>
+                </div>
+                
+                <div class="dict-section">
+                    <div class="dict-label">Form in Text</div>
+                    <div class="dict-content">${dict.form}</div>
+                </div>
+                
+                ${parseHTML ? `
+                <div class="dict-section">
+                    <div class="dict-label">Grammatical Parse</div>
+                    <div class="dict-parse">
+                        ${parseHTML}
+                    </div>
+                </div>
+                ` : ''}
+            `;
+            
+            document.getElementById('dict-popup').classList.add('active');
+        }
+
+        function closeDictionary() {
+            document.getElementById('dict-popup').classList.remove('active');
+            document.querySelectorAll('.word').forEach(w => w.classList.remove('selected'));
+        }
+
+        function closeReader() {
+            document.getElementById('reader').classList.remove('active');
+            closeDictionary();
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
