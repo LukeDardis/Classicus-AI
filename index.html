@@ -635,6 +635,35 @@
             return parts.join(' ');
         }
 
+        // ── Wiktionary definitions (CORS-enabled, no proxy needed) ──────────
+        const _WIKT_CACHE = {};
+        async function lookupDefinition(lemma, lang) {
+            if (!lemma) return null;
+            const cacheKey = lemma + '|' + lang;
+            if (_WIKT_CACHE[cacheKey] !== undefined) return _WIKT_CACHE[cacheKey];
+            const langName = lang === 'greek' ? 'Ancient Greek' : 'Latin';
+            try {
+                const r = await fetch(
+                    'https://en.wiktionary.org/api/rest_v1/page/definition/'
+                    + encodeURIComponent(lemma)
+                );
+                if (!r.ok) { _WIKT_CACHE[cacheKey] = null; return null; }
+                const data = await r.json();
+                for (const sections of Object.values(data)) {
+                    for (const sec of sections) {
+                        if (sec.language === langName && sec.definitions?.length) {
+                            const def = sec.definitions[0].definition
+                                .replace(/<[^>]+>/g, '').trim();
+                            _WIKT_CACHE[cacheKey] = def;
+                            return def;
+                        }
+                    }
+                }
+            } catch (_) {}
+            _WIKT_CACHE[cacheKey] = null;
+            return null;
+        }
+
         const _GREEK_TO_BETA = {'α':'a','β':'b','γ':'g','δ':'d','ε':'e','ζ':'z','η':'h','θ':'q','ι':'i','κ':'k','λ':'l','μ':'m','ν':'n','ξ':'c','ο':'o','π':'p','ρ':'r','σ':'s','ς':'s','τ':'t','υ':'u','φ':'f','χ':'x','ψ':'y','ω':'w'};
 
         function _normalizeMorphKey(word, lang) {
@@ -5064,7 +5093,6 @@ ${text.translation}
             const popup   = document.getElementById('dict-popup');
             const content = document.getElementById('dict-content');
 
-            // Show spinner immediately while we fetch
             content.innerHTML = `
                 <div class="dict-word">${word}</div>
                 <div class="dict-loading">
@@ -5080,7 +5108,6 @@ ${text.translation}
             // 2. Live Perseus lookup for cache misses
             if (!analyses) {
                 analyses = await lookupPerseus(word, lang);
-                // Store in session cache so repeat clicks are instant
                 if (analyses && cache[lang]) cache[lang][key] = analyses;
             }
 
@@ -5091,8 +5118,14 @@ ${text.translation}
                 return;
             }
 
+            // 3. Fetch Wiktionary definitions for all unique lemmas in parallel
+            const uniqueLemmas = [...new Set(analyses.map(a => a.lemma).filter(Boolean))];
+            const defResults   = await Promise.all(uniqueLemmas.map(l => lookupDefinition(l, lang)));
+            const defs         = Object.fromEntries(uniqueLemmas.map((l, i) => [l, defResults[i]]));
+
             const count = analyses.length;
             const analysesHTML = analyses.map((a, i) => {
+                const def = defs[a.lemma];
                 const detailItems = Object.entries(a.details || {})
                     .map(([k, v]) => `<span class="dict-parse-item"><span class="dict-parse-label">${k}:</span> ${v}</span>`)
                     .join('');
@@ -5103,6 +5136,10 @@ ${text.translation}
                             <div class="dict-label">Lemma</div>
                             <div class="dict-content">${a.lemma || '\u2014'}</div>
                         </div>
+                        ${def ? `<div class="dict-section">
+                            <div class="dict-label">Definition</div>
+                            <div class="dict-content" style="font-weight:500">${def}</div>
+                        </div>` : ''}
                         <div class="dict-section">
                             <div class="dict-label">Part of Speech</div>
                             <div class="dict-content">${a.pos || '\u2014'}</div>
