@@ -7,7 +7,7 @@ Usage:
 
 Resume-safe: words already in the DB are skipped (no API calls made).
 Rate: ~1.5 s per new word to respect Perseus rate limits.
-Bible texts are excluded (they don't use makeWordClickable).
+Covers: all texts in const texts{} AND Greek/Latin verses in BIBLE_TEXTS.
 """
 
 import re
@@ -70,6 +70,23 @@ def extract_corpus_words(html_path: Path) -> dict[str, set[str]]:
                 token = token.lower()
                 if len(token) >= 2 and not re.match(r'^[\d·,;:.!?—()\[\]«»"""\'\']+$', token):
                     corpus[lang].add(token)
+
+    # Also extract words from BIBLE_TEXTS (Greek g: and Latin l: fields)
+    bible_match = re.search(r'const BIBLE_TEXTS\s*=\s*\{(.+?)\n        \};', source, re.DOTALL)
+    if bible_match:
+        bible_block = bible_match.group(1)
+        for greek_verse in re.findall(r'g\s*:\s*"([^"]+)"', bible_block):
+            for raw_token in re.split(r'[\s\n\r]+', greek_verse):
+                token = _STRIP_RE.sub('', raw_token).lower()
+                if len(token) >= 2 and not re.match(r'^[\d·,;:.!?—()\[\]«»"""\'\']+$', token):
+                    corpus['greek'].add(token)
+        for latin_verse in re.findall(r'l\s*:\s*"([^"]+)"', bible_block):
+            for raw_token in re.split(r'[\s\n\r]+', latin_verse):
+                token = _STRIP_RE.sub('', raw_token).lower()
+                if len(token) >= 2 and not re.match(r'^[\d·,;:.!?—()\[\]«»"""\'\']+$', token):
+                    corpus['latin'].add(token)
+    else:
+        print('  Warning: BIBLE_TEXTS block not found — Bible words not extracted')
 
     return corpus
 
