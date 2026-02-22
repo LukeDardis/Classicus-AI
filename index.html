@@ -4984,8 +4984,8 @@ ${text.translation}
                 tableContent = chapterData.map((v, idx) => `
                     <tr class="verse-row">
                         <td class="verse-num-cell">${idx + 1}</td>
-                        <td class="greek-cell greek-bible-col">${v.g}</td>
-                        <td class="latin-cell latin-bible-col">${v.l}</td>
+                        <td class="greek-cell greek-bible-col">${makeWordClickable(v.g, 'greek')}</td>
+                        <td class="latin-cell latin-bible-col">${makeWordClickable(v.l, 'latin')}</td>
                         <td class="english-cell english-bible-col">${v.e}</td>
                     </tr>
                 `).join('');
