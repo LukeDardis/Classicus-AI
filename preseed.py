@@ -26,14 +26,28 @@ _PUNCT = set('·,;:.!?—()[]«»""\'\'')
 _STRIP_RE = re.compile(r'^[·,;:.!?—()\[\]«»""\'\']+|[·,;:.!?—()\[\]«»""\'\']+$')
 
 
-def extract_corpus_words(html_path: Path) -> dict[str, set[str]]:
+_JUNK_RE = re.compile(r'[^\w\u0370-\u03FF\u1F00-\u1FFF]')  # must contain a real letter
+
+
+def _tokenize(text: str, lang: str, freq: dict) -> None:
+    """Tokenize a block of text and count word frequencies in-place."""
+    for raw_token in re.split(r'[\s\n\r]+', text):
+        token = _STRIP_RE.sub('', raw_token).lower()
+        # Must be ≥2 chars, contain at least one letter (not pure punct/digits)
+        if len(token) >= 2 and re.search(r'[a-zA-Z\u0370-\u03FF\u1F00-\u1FFF]', token):
+            freq[token] = freq.get(token, 0) + 1
+
+
+def extract_corpus_words(html_path: Path) -> dict[str, list[str]]:
     """
-    Returns {'greek': {word, ...}, 'latin': {word, ...}} from the HTML corpus.
-    Stops at 'const BIBLE_BOOKS' so Bible content is excluded.
+    Returns {'greek': [word, ...], 'latin': [word, ...]} sorted by frequency
+    (most common first) so the preseed covers high-frequency vocabulary first.
     """
     source = html_path.read_text(encoding='utf-8')
 
-    # Find the texts block, stopping before BIBLE_BOOKS
+    freq: dict[str, dict[str, int]] = {'greek': {}, 'latin': {}}
+
+    # ── Regular texts (const texts = { greek: [...], latin: [...] }) ──────────
     match = re.search(
         r'const texts\s*=\s*\{(.+?)const BIBLE_BOOKS',
         source,
@@ -44,51 +58,35 @@ def extract_corpus_words(html_path: Path) -> dict[str, set[str]]:
 
     texts_block = match.group(1)
 
-    corpus: dict[str, set[str]] = {'greek': set(), 'latin': set()}
-
-    # Find all sections per language.  The structure is:
-    #   greek: [ { ... content: `...` ... }, ... ],
-    #   latin: [ { ... content: `...` ... }, ... ],
     for lang in ('greek', 'latin'):
-        # Match the language section up to the next top-level key or end
         lang_pattern = re.compile(
             rf'{lang}\s*:\s*\[(.+?)(?:(?:greek|latin)\s*:|\Z)',
             re.DOTALL,
         )
         lang_match = lang_pattern.search(texts_block)
         if not lang_match:
-            print(f'  Warning: no {lang} section found')
+            print(f'  Warning: no {lang} section found in const texts')
             continue
 
-        lang_block = lang_match.group(1)
+        for content_match in re.finditer(r'content\s*:\s*`([^`]+)`', lang_match.group(1), re.DOTALL):
+            _tokenize(content_match.group(1), lang, freq[lang])
 
-        # Extract all backtick template literals (content: `...`)
-        for content_match in re.finditer(r'content\s*:\s*`([^`]+)`', lang_block, re.DOTALL):
-            content = content_match.group(1)
-            for raw_token in re.split(r'[\s\n\r]+', content):
-                token = _STRIP_RE.sub('', raw_token)
-                token = token.lower()
-                if len(token) >= 2 and not re.match(r'^[\d·,;:.!?—()\[\]«»"""\'\']+$', token):
-                    corpus[lang].add(token)
-
-    # Also extract words from BIBLE_TEXTS (Greek g: and Latin l: fields)
+    # ── Bible texts (BIBLE_TEXTS = { matthew: { 1: [{g:"...",l:"..."},...] }}  ──
     bible_match = re.search(r'const BIBLE_TEXTS\s*=\s*\{(.+?)\n        \};', source, re.DOTALL)
     if bible_match:
         bible_block = bible_match.group(1)
-        for greek_verse in re.findall(r'g\s*:\s*"([^"]+)"', bible_block):
-            for raw_token in re.split(r'[\s\n\r]+', greek_verse):
-                token = _STRIP_RE.sub('', raw_token).lower()
-                if len(token) >= 2 and not re.match(r'^[\d·,;:.!?—()\[\]«»"""\'\']+$', token):
-                    corpus['greek'].add(token)
-        for latin_verse in re.findall(r'l\s*:\s*"([^"]+)"', bible_block):
-            for raw_token in re.split(r'[\s\n\r]+', latin_verse):
-                token = _STRIP_RE.sub('', raw_token).lower()
-                if len(token) >= 2 and not re.match(r'^[\d·,;:.!?—()\[\]«»"""\'\']+$', token):
-                    corpus['latin'].add(token)
+        for verse in re.findall(r'g\s*:\s*"([^"]+)"', bible_block):
+            _tokenize(verse, 'greek', freq['greek'])
+        for verse in re.findall(r'l\s*:\s*"([^"]+)"', bible_block):
+            _tokenize(verse, 'latin', freq['latin'])
     else:
         print('  Warning: BIBLE_TEXTS block not found — Bible words not extracted')
 
-    return corpus
+    # Return deduplicated lists sorted by frequency descending
+    return {
+        lang: [w for w, _ in sorted(f.items(), key=lambda x: -x[1])]
+        for lang, f in freq.items()
+    }
 
 
 def main() -> None:
