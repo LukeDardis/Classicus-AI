@@ -41,7 +41,7 @@ classicus/
 ├── server.py                 # Flask server
 ├── preseed.py                # One-time corpus pre-seeding script
 ├── requirements.txt
-└── morphology.db             # Auto-created on first run (not in repo)
+└── morphology.db             # Pre-seeded SQLite cache (910 corpus words)
 ```
 
 ---
@@ -65,7 +65,7 @@ Pre-fetches morphological data for every word in the corpus so all clicks are in
 ```bash
 python preseed.py
 ```
-Without pre-seeding the app still works — words are fetched from Perseus on demand and cached permanently on first click.
+The pre-seeded `morphology.db` is included in the repo, so this step is only needed if you want to extend coverage beyond the included corpus.
 
 ---
 
