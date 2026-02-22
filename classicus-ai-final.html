@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classicus AI - Complete Library with Interactive Dictionary</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&family=GFS+Didot&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --latin-primary: #8b2635;
+            --greek-primary: #1a4d7a;
+            --bible-primary: #3a6b3a;
+            --ink: #1a1410;
+            --gold: #c9a84c;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Playfair Display', serif;
+            background: linear-gradient(135deg, #e8f1f8 0%, #f4ede1 100%);
+            color: var(--ink);
+            line-height: 1.6;
+        }
+
+        body.greek-mode { background: linear-gradient(135deg, #e8f1f8, #d4e8f7); }
+        body.latin-mode { background: linear-gradient(135deg, #f4ede1, #e8ddc8); }
+        body.bible-mode { background: linear-gradient(135deg, #e8f4e8, #d8e8d8); }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+
+        header {
+            text-align: center;
+            padding: 2rem 0;
+            border-bottom: 3px double var(--ink);
+            margin-bottom: 3rem;
+        }
+
+        .logo {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 2.5rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--latin-primary), var(--greek-primary), var(--bible-primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.7;
+            font-style: italic;
+        }
+
+        .lang-switcher {
+            margin: 2rem 0;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .lang-btn {
+            padding: 0.75rem 2rem;
+            border: 2px solid var(--ink);
+            background: white;
+            cursor: pointer;
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .lang-btn.active {
+            background: var(--ink);
+            color: white;
+        }
+
+        .library {
+            display: grid;
+            gap: 2rem;
+        }
+
+        .text-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border-left: 5px solid var(--greek-primary);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        body.latin-mode .text-card { border-left-color: var(--latin-primary); }
+        body.bible-mode .text-card { border-left-color: var(--bible-primary); }
+        .text-card:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(0,0,0,0.15); }
+
+        .text-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--greek-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        body.latin-mode .text-title { color: var(--latin-primary); }
+        body.bible-mode .text-title { color: var(--bible-primary); }
+
+        .text-meta {
+            font-size: 0.95rem;
+            opacity: 0.7;
+            margin-bottom: 0.5rem;
+        }
+
+        .text-level {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: var(--greek-primary);
+            color: white;
+            font-size: 0.75rem;
+            border-radius: 12px;
+            font-family: 'IBM Plex Mono', monospace;
+            margin-right: 0.5rem;
+        }
+
+        body.latin-mode .text-level { background: var(--latin-primary); }
+        body.bible-mode .text-level { background: var(--bible-primary); }
+
+        .text-desc {
+            margin-top: 1rem;
+            line-height: 1.7;
+        }
+
+        /* READER - ENHANCED WITH FACING TEXT */
+        .reader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 1000;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .reader.active { display: block; }
+
+        .reader-content {
+            max-width: 1600px;
+            margin: 2rem auto;
+            background: white;
+            padding: 3rem;
+            border-radius: 8px;
+        }
+
+        .reader-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .reader-title {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .reader-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .toggle-translation-btn {
+            background: var(--greek-primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 600;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        body.latin-mode .toggle-translation-btn { background: var(--latin-primary); }
+        body.bible-mode .toggle-translation-btn { background: var(--bible-primary); }
+
+        .toggle-translation-btn:hover {
+            opacity: 0.8;
+        }
+
+        .close-btn {
+            background: var(--ink);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 600;
+            border-radius: 4px;
+        }
+
+        /* FACING TEXT LAYOUT */
+        .facing-text {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            margin: 2rem 0;
+            align-items: start;
+        }
+
+        .original-column {
+            padding-right: 2rem;
+            border-right: 2px solid #e0e0e0;
+        }
+
+        .translation-column {
+            padding-left: 2rem;
+            transition: opacity 0.3s;
+        }
+
+        .translation-column.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .greek-text {
+            font-family: 'GFS Didot', serif;
+            font-size: 1.3rem;
+            line-height: 2;
+        }
+
+        .latin-text {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            line-height: 2;
+        }
+
+        .poetry-line {
+            margin-left: 2rem;
+            margin-bottom: 0.5rem;
+            position: relative;
+        }
+
+        .line-num {
+            position: absolute;
+            left: -2.5rem;
+            color: var(--gold);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 600;
+            min-width: 2rem;
+            text-align: right;
+        }
+
+        .translation-text {
+            font-size: 1.1rem;
+            line-height: 1.9;
+            opacity: 0.9;
+        }
+
+        /* CLICKABLE WORDS */
+        .word {
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 3px;
+            transition: background 0.2s;
+            display: inline-block;
+        }
+
+        .word:hover {
+            background: rgba(201, 168, 76, 0.2);
+        }
+
+        .word.selected {
+            background: rgba(201, 168, 76, 0.4);
+        }
+
+        /* DICTIONARY POPUP */
+        .dictionary-popup {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 3px solid var(--gold);
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
+            max-height: 50vh;
+            overflow-y: auto;
+            padding: 2rem;
+            display: none;
+            z-index: 2000;
+        }
+
+        .dictionary-popup.active {
+            display: block;
+        }
+
+        .dict-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: #ddd;
+            border: none;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .dict-word {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--greek-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        body.latin-mode .dict-word { color: var(--latin-primary); }
+
+        .dict-section {
+            margin: 1.5rem 0;
+        }
+
+        .dict-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 0.5rem;
+        }
+
+        .dict-content {
+            font-size: 1.1rem;
+            line-height: 1.7;
+        }
+
+        .dict-parse {
+            background: #f5f5f5;
+            padding: 1rem;
+            border-radius: 4px;
+            border-left: 4px solid var(--gold);
+        }
+
+        .dict-parse-item {
+            display: inline-block;
+            margin-right: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .dict-parse-label {
+            font-weight: 600;
+            color: var(--gold);
+        }
+
+        .dict-loading {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 1.5rem 0; color: #999;
+            font-family: 'IBM Plex Mono', monospace; font-size: 0.9rem;
+        }
+        .dict-spinner {
+            width: 18px; height: 18px; border-radius: 50%;
+            border: 3px solid #e0e0e0; border-top-color: var(--gold);
+            animation: spin 0.8s linear infinite; flex-shrink: 0;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .dict-not-found { padding: 1.5rem 0; color: #999; font-style: italic; }
+        .dict-analysis-block {
+            border-left: 4px solid var(--gold); background: #f9f9f9;
+            padding: 0.75rem 1rem; margin-bottom: 0.75rem;
+            border-radius: 0 4px 4px 0;
+        }
+        .dict-analysis-num {
+            font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem;
+            font-weight: 600; color: #aaa; text-transform: uppercase; margin-bottom: 0.4rem;
+        }
+
+        /* BIBLE SPECIFIC */
+        .bible-nav {
+            background: white;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .bible-nav select {
+            padding: 0.5rem 1rem;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-family: 'Playfair Display', serif;
+            margin-right: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .col-toggles {
+            display: inline-flex;
+            gap: 0.5rem;
+            margin-left: 1rem;
+        }
+
+        .col-toggle {
+            padding: 0.4rem 0.9rem;
+            border: 2px solid #ddd;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 600;
+            cursor: pointer;
+            background: white;
+            transition: all 0.2s;
+        }
+
+        .col-toggle.active.greek-col { background: var(--greek-primary); color: white; border-color: var(--greek-primary); }
+        .col-toggle.active.latin-col { background: var(--latin-primary); color: white; border-color: var(--latin-primary); }
+        .col-toggle.active.english-col { background: var(--bible-primary); color: white; border-color: var(--bible-primary); }
+
+        .verse-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .verse-row:hover > td {
+            background: rgba(201,168,76,0.04);
+        }
+
+        .verse-row td {
+            padding: 0.9rem 1rem;
+            vertical-align: top;
+            border-bottom: 1px solid #ece5d8;
+        }
+
+        .verse-num-cell {
+            width: 3rem;
+            text-align: center;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--gold);
+        }
+
+        .greek-cell {
+            font-family: 'GFS Didot', serif;
+            font-size: 1.15rem;
+            line-height: 1.8;
+            color: #12305a;
+        }
+
+        .latin-cell {
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: #4a1020;
+            font-style: italic;
+        }
+
+        .english-cell {
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: #1a3a1a;
+        }
+
+        .col-header-row td {
+            padding: 0.5rem 1rem;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 3px solid #ddd;
+            background: #faf6f0;
+        }
+
+        .hidden-col { display: none; }
+
+        .back-btn {
+            display: inline-block;
+            margin-top: 2rem;
+            padding: 0.75rem 2rem;
+            background: var(--ink);
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .facing-text {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .original-column {
+                border-right: none;
+                border-bottom: 2px solid #e0e0e0;
+                padding-right: 0;
+                padding-bottom: 2rem;
+            }
+            
+            .translation-column {
+                padding-left: 0;
+                padding-top: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="logo">CLASSICUS AI</h1>
+            <p class="subtitle">Complete Classical & Biblical Library with Interactive Dictionary</p>
+        </header>
+
+        <div class="lang-switcher">
+            <button class="lang-btn active" onclick="switchMode('greek')">ἙΛΛΗΝΙΚΆ · Greek</button>
+            <button class="lang-btn" onclick="switchMode('latin')">LATINA · Latin</button>
+            <button class="lang-btn" onclick="switchMode('bible')">📖 Bible (Polyglot)</button>
+        </div>
+
+        <!-- Greek Library -->
+        <div class="library greek-library"></div>
+
+        <!-- Latin Library -->
+        <div class="library latin-library" style="display:none;"></div>
+
+        <!-- Bible Library -->
+        <div class="library bible-library" style="display:none;"></div>
+    </div>
+
+    <!-- Reader Modal -->
+    <div class="reader" id="reader">
+        <div class="reader-content">
+            <div class="reader-header">
+                <h2 class="reader-title" id="reader-title"></h2>
+                <div class="reader-controls">
+                    <button class="toggle-translation-btn" id="toggle-trans-btn" onclick="toggleTranslation()">
+                        Hide Translation
+                    </button>
+                    <button class="close-btn" onclick="closeReader()">✕ CLOSE</button>
+                </div>
+            </div>
+            <div id="reader-body"></div>
+            <button class="back-btn" onclick="closeReader()">← Back to Library</button>
+        </div>
+    </div>
+
+    <!-- Dictionary Popup -->
+    <div class="dictionary-popup" id="dict-popup">
+        <button class="dict-close" onclick="closeDictionary()">✕</button>
+        <div id="dict-content"></div>
+    </div>
+
+    <script>
+        // Morphological data is now served by /api/morph (see server.py)
+
+        // ═══════════════════════════════════════════════════════════════
+        // ALL ORIGINAL TEXTS RESTORED
+        // ═══════════════════════════════════════════════════════════════
+
+        const texts = {
+            greek: [
+                {
+                    id: 1,
+                    title: "Homer's Odyssey - Book 1 (Lines 1-95)",
+                    author: "Homer (8th century BC)",
+                    level: "advanced",
+                    description: "The complete opening of the Odyssey. The invocation, council of the gods, and Athena's visit to Telemachus.",
+                    content: `Ἄνδρα μοι ἔννεπε, Μοῦσα, πολύτροπον, ὃς μάλα πολλὰ
+πλάγχθη, ἐπεὶ Τροίης ἱερὸν πτολίεθρον ἔπερσε·
+πολλῶν δ᾽ ἀνθρώπων ἴδεν ἄστεα καὶ νόον ἔγνω,
+πολλὰ δ᾽ ὅ γ᾽ ἐν πόντῳ πάθεν ἄλγεα ὃν κατὰ θυμόν,
+ἀρνύμενος ἥν τε ψυχὴν καὶ νόστον ἑταίρων.
+ἀλλ᾽ οὐδ᾽ ὣς ἑτάρους ἐρρύσατο, ἱέμενός περ·
+αὐτῶν γὰρ σφετέρῃσιν ἀτασθαλίῃσιν ὄλοντο,
+νήπιοι, οἳ κατὰ βοῦς Ὑπερίονος Ἠελίοιο
+ἤσθιον· αὐτὰρ ὁ τοῖσιν ἀφείλετο νόστιμον ἦμαρ.
+τῶν ἁμόθεν γε, θεά, θύγατερ Διός, εἰπὲ καὶ ἡμῖν.
+
+Ἔνθ᾽ ἄλλοι μὲν πάντες, ὅσοι φύγον αἰπὺν ὄλεθρον,
+οἴκοι ἔσαν, πόλεμόν τε πεφευγότες ἠδὲ θάλασσαν·
+τὸν δ᾽ οἶον νόστου κεχρημένον ἠδὲ γυναικὸς
+νύμφη πότνι᾽ ἔρυκε Καλυψὼ δῖα θεάων
+ἐν σπέσσι γλαφυροῖσι, λιλαιομένη πόσιν εἶναι.
+ἀλλ᾽ ὅτε δὴ ἔτος ἦλθε περιπλομένων ἐνιαυτῶν,
+τῷ οἱ ἐπεκλώσαντο θεοὶ οἶκόνδε νέεσθαι
+εἰς Ἰθάκην, οὐδ᾽ ἔνθα πεφυγμένος ἦεν ἀέθλων
+καὶ μετὰ οἷσι φίλοισι. θεοὶ δ᾽ ἐλέαιρον ἅπαντες
+νόσφι Ποσειδάωνος· ὁ δ᾽ ἀσπερχὲς μενέαινεν
+ἀντιθέῳ Ὀδυσῆϊ πάρος ἣν γαῖαν ἱκέσθαι.`,
+                    translation: `Tell me, O Muse, of the man of many devices, who wandered full many ways after he had sacked the sacred citadel of Troy. Many were the men whose cities he saw and whose mind he learned, and many the woes he suffered in his heart upon the sea, seeking to win his own life and the return of his comrades. Yet even so he saved not his comrades, though he desired it sore, for through their own blind folly they perished—fools, who devoured the kine of Helios Hyperion; but he took from them the day of their returning. Of these things, goddess, daughter of Zeus, beginning where you will, tell even unto us.
+
+Now all the rest, as many as had escaped sheer destruction, were at home, safe from both war and sea, but Odysseus alone, filled with longing for his return and for his wife, did the queenly nymph Calypso, that bright goddess, keep back in her hollow caves, yearning that he should be her husband. But when, as the seasons revolved, the year came in which the gods had ordained that he should return home to Ithaca, not even there was he free from toils, even among his own people. And all the gods pitied him save Poseidon, who ever cherished relentless wrath against godlike Odysseus until he reached his own land.`
+                },
+                {
+                    id: 2,
+                    title: "Plato's Apology - Opening Defense",
+                    author: "Plato (c. 428-348 BC)",
+                    level: "intermediate",
+                    description: "Socrates' speech at his trial. Clear Attic prose showing philosophical argument and rhetoric.",
+                    content: `Ὅτι μὲν ὑμεῖς, ὦ ἄνδρες Ἀθηναῖοι, πεπόνθατε ὑπὸ τῶν ἐμῶν κατηγόρων, οὐκ οἶδα· ἐγὼ δ᾽ οὖν καὶ αὐτὸς ὑπ᾽ αὐτῶν ὀλίγου ἐμαυτοῦ ἐπελαθόμην, οὕτω πιθανῶς ἔλεγον. Καίτοι ἀληθές γε ὡς ἔπος εἰπεῖν οὐδὲν εἰρήκασιν. Μάλιστα δὲ αὐτῶν ἓν ἐθαύμασα τῶν πολλῶν ὧν ἐψεύσαντο, τοῦτο ἐν ᾧ ἔλεγον ὡς χρῆν ὑμᾶς εὐλαβεῖσθαι μὴ ὑπ᾽ ἐμοῦ ἐξαπατηθῆτε ὡς δεινοῦ ὄντος λέγειν.
+
+Τὸ γὰρ μὴ αἰσχυνθῆναι ὅτι αὐτίκα ὑπ᾽ ἐμοῦ ἐξελεγχθήσονται ἔργῳ, ἐπειδὰν μηδ᾽ ὁπωστιοῦν φαίνωμαι δεινὸς λέγειν, τοῦτό μοι ἔδοξεν αὐτῶν ἀναισχυντότατον εἶναι, εἰ μὴ ἄρα δεινὸν καλοῦσιν οὗτοι λέγειν τὸν τἀληθῆ λέγοντα. Εἰ μὲν γὰρ τοῦτο λέγουσιν, ὁμολογοίην ἂν ἔγωγε οὐ κατὰ τούτους εἶναι ῥήτωρ.
+
+Οὗτοι μὲν οὖν, ὥσπερ ἐγὼ λέγω, ἤ τι ἢ οὐδὲν ἀληθὲς εἰρήκασιν, ὑμεῖς δέ μου ἀκούσεσθε πᾶσαν τὴν ἀλήθειαν. Οὐ μέντοι μὰ Δία, ὦ ἄνδρες Ἀθηναῖοι, κεκαλλιεπημένους γε λόγους, ὥσπερ οἱ τούτων, ῥήμασί τε καὶ ὀνόμασιν οὐδὲ κεκοσμημένους, ἀλλ᾽ ἀκούσεσθε εἰκῇ λεγόμενα τοῖς ἐπιτυχοῦσιν ὀνόμασιν.`,
+                    translation: `What you, men of Athens, have been affected by my accusers, I do not know. But I, for my part, almost forgot who I was, so persuasively did they speak. And yet they have said, so to speak, nothing true. But of all the many falsehoods they told, one thing especially amazed me—when they said that you should be on your guard lest you be deceived by me, since I am a clever speaker.
+
+For that they were not ashamed that they would immediately be refuted by me in fact, when I should appear not at all a clever speaker—this seemed to me their most shameless act, unless indeed by "clever speaker" they mean one who speaks the truth. For if this is what they mean, I would agree that I am an orator, though not according to their standard.
+
+These men, then, as I say, have said little or nothing true; but from me you shall hear the whole truth. Not, by Zeus, men of Athens, elegant language adorned with fine words and phrases like theirs, but you shall hear things spoken plainly in the words that occur to me.`
+                },
+                {
+                    id: 3,
+                    title: "Xenophon's Anabasis - Book 1, Chapter 1",
+                    author: "Xenophon (c. 430-354 BC)",
+                    level: "intermediate",
+                    description: "The opening of the Anabasis. Historical narrative about Cyrus and the Ten Thousand.",
+                    content: `Δαρείου καὶ Παρυσάτιδος γίγνονται παῖδες δύο, πρεσβύτερος μὲν Ἀρταξέρξης, νεώτερος δὲ Κῦρος· ἐπεὶ δὲ ἠσθένει Δαρεῖος καὶ ὑπώπτευε τελευτὴν τοῦ βίου, ἐβούλετο τὼ παῖδε ἀμφοτέρω παρεῖναι.
+
+Ὁ μὲν οὖν πρεσβύτερος παρὼν ἐτύγχανε· Κῦρον δὲ μεταπέμπεται ἀπὸ τῆς ἀρχῆς ἧς αὐτὸν σατράπην ἐποίησε, καὶ στρατηγὸν δὲ αὐτὸν ἀπέδειξε πάντων ὅσοι εἰς Καστωλοῦ πεδίον ἁθροίζονται.
+
+Ἀναβαίνει οὖν ὁ Κῦρος λαβὼν Τισσαφέρνην ὡς φίλον, καὶ τῶν Ἑλλήνων ἀνέβησαν σὺν αὐτῷ ὁπλῖται μὲν τρισχίλιοι, στρατηγὸς δὲ αὐτῶν Κλέαρχος Λακεδαιμόνιος.
+
+Ἐπεὶ δὲ ἀφίκετο, Ἀρταξέρξης διαβάλλεται ὑπὸ Τισσαφέρνους πρὸς τὴν μητέρα ὡς ἐπιβουλεύοι αὐτῷ ὁ Κῦρος. Καὶ ἡ μὲν πιστεύει καὶ συλλαμβάνει Κῦρον ὡς ἀποκτενοῦσα· ἔπειτα μεταμέλειαν λαβοῦσα ἀποπέμπει πάλιν ἐπὶ τὴν ἀρχήν.
+
+Ὁ δ᾽ ἐπεὶ ἀπῆλθε κινδυνεύσας καὶ ἀτιμασθείς, βουλεύεται ὅπως μήποτε ἔτι ἔσται ἐπὶ τῷ ἀδελφῷ, ἀλλ᾽ ἢν δύνηται, βασιλεύσει ἀντ᾽ ἐκείνου.`,
+                    translation: `Darius and Parysatis had two sons born to them, the elder Artaxerxes and the younger Cyrus. Now when Darius lay sick and suspected that the end of his life was near, he wished to have both his sons with him.
+
+The elder, as it chanced, was already there; but Cyrus he summoned from the province of which he had made him satrap, and he had also appointed him commander of all the forces that muster in the plain of Castolus.
+
+So Cyrus went up, taking with him Tissaphernes as a friend, and there went up with him also three thousand Greek hoplites, under the command of Clearchus, a Lacedaemonian.
+
+After his arrival, Artaxerxes was accused by Tissaphernes before his mother of plotting against him. And she believed the accusation and arrested Cyrus, intending to put him to death; afterwards, however, she relented and sent him back again to his province.
+
+And Cyrus, after he had gone back, having been in danger and having suffered dishonor, began to plan that he might never again be in the power of his brother, but, if possible, might be king in his stead.`
+                }
+            ],
+            latin: [
+                {
+                    id: 4,
+                    title: "Caesar's Gallic Wars - Book 1, Opening",
+                    author: "Julius Caesar (100-44 BC)",
+                    level: "intermediate",
+                    description: "The famous opening describing Gaul's geography and peoples. Clear military prose.",
+                    content: `Gallia est omnis divisa in partes tres, quarum unam incolunt Belgae, aliam Aquitani, tertiam qui ipsorum lingua Celtae, nostra Galli appellantur.
+
+Hi omnes lingua, institutis, legibus inter se differunt. Gallos ab Aquitanis Garumna flumen, a Belgis Matrona et Sequana dividit.
+
+Horum omnium fortissimi sunt Belgae, propterea quod a cultu atque humanitate provinciae longissime absunt, minimeque ad eos mercatores saepe commeant atque ea quae ad effeminandos animos pertinent important, proximique sunt Germanis, qui trans Rhenum incolunt, quibuscum continenter bellum gerunt.
+
+Qua de causa Helvetii quoque reliquos Gallos virtute praecedunt, quod fere cotidianis proeliis cum Germanis contendunt, cum aut suis finibus eos prohibent aut ipsi in eorum finibus bellum gerunt.
+
+Eorum una pars, quam Gallos obtinere dictum est, initium capit a flumine Rhodano, continetur Garumna flumine, Oceano, finibus Belgarum, attingit etiam ab Sequanis et Helvetiis flumen Rhenum, vergit ad septentriones.
+
+Belgae ab extremis Galliae finibus oriuntur, pertinent ad inferiorem partem fluminis Rheni, spectant in septentrionem et orientem solem. Aquitania a Garumna flumine ad Pyrenaeos montes et eam partem Oceani quae est ad Hispaniam pertinet; spectat inter occasum solis et septentriones.`,
+                    translation: `All Gaul is divided into three parts, one of which the Belgae inhabit, the Aquitani another, and those who in their own language are called Celts, in ours Gauls, the third.
+
+All these differ from each other in language, customs, and laws. The river Garonne separates the Gauls from the Aquitani; the Marne and the Seine separate them from the Belgae.
+
+Of all these, the Belgae are the bravest, because they are farthest from the civilization and refinement of the Province, and merchants least frequently resort to them and import those things which tend to effeminate the mind; and they are nearest to the Germans, who dwell beyond the Rhine, with whom they are continually waging war.
+
+For which reason the Helvetii also surpass the rest of the Gauls in valor, as they contend with the Germans in almost daily battles, either defending their own territories from them or waging war on their frontiers.
+
+One part of these, which the Gauls occupy, takes its beginning at the river Rhone; it is bounded by the river Garonne, the ocean, and the territories of the Belgae; it also reaches the river Rhine from the country of the Sequani and the Helvetii, and stretches toward the north.
+
+The Belgae rise from the extreme frontier of Gaul, extend to the lower part of the river Rhine, and look toward the north and the rising sun. Aquitania extends from the river Garonne to the Pyrenean mountains and to that part of the ocean which is near Spain; it looks between the setting of the sun and the north.`
+                },
+                {
+                    id: 5,
+                    title: "Cicero's First Catiline Oration - Opening",
+                    author: "Marcus Tullius Cicero (106-43 BC)",
+                    level: "advanced",
+                    description: "The famous opening of Cicero's speech against Catiline. Complex periodic sentences.",
+                    content: `Quo usque tandem abutere, Catilina, patientia nostra? Quam diu etiam furor iste tuus nos eludet? Quem ad finem sese effrenata iactabit audacia? Nihilne te nocturnum praesidium Palati, nihil urbis vigiliae, nihil timor populi, nihil concursus bonorum omnium, nihil hic munitissimus habendi senatus locus, nihil horum ora voltusque moverunt?
+
+Patere tua consilia non sentis, constrictam iam horum omnium scientia teneri coniurationem tuam non vides? Quid proxima, quid superiore nocte egeris, ubi fueris, quos convocaveris, quid consilii ceperis, quem nostrum ignorare arbitraris?
+
+O tempora, o mores! Senatus haec intellegit. Consul videt; hic tamen vivit. Vivit? Immo vero etiam in senatum venit. Fit publici consilii particeps, notat et designat oculis ad caedem unum quemque nostrum. Nos autem fortes viri satis facere rei publicae videmur, si istius furorem ac tela vitemus.
+
+Ad mortem te, Catilina, duci iussu consulis iam pridem oportebat, in te conferri pestem, quam tu in nos omnes iam diu machinaris.`,
+                    translation: `How long, O Catiline, will you abuse our patience? How long will that madness of yours mock us? To what end will your unbridled audacity hurl itself? Does nothing move you—not the nightly watch on the Palatine, not the city patrols, not the fear of the people, not the assembly of all good men, not this most fortified place for holding the senate, not the looks and faces of these men?
+
+Do you not perceive that your plans are exposed? Do you not see that your conspiracy is already constrained by the knowledge of all these men? What you did last night, what the night before, where you were, whom you summoned, what plan you adopted—which of us do you think is ignorant of these things?
+
+O the times! O the morals! The senate understands these things. The consul sees them; yet this man lives. Lives? Indeed, he even comes into the senate. He participates in public deliberation. He marks and designates with his eyes each one of us for slaughter. And we, brave men, think we are doing enough for the republic if we avoid his fury and his weapons.
+
+Long ago, Catiline, you ought to have been led to death by the consul's command, and that destruction which you have been plotting against us all should have been brought upon yourself.`
+                },
+                {
+                    id: 6,
+                    title: "Vergil's Aeneid - Book I (COMPLETE - All 756 Lines)",
+                    author: "Publius Vergilius Maro (70-19 BC)",
+                    level: "advanced",
+                    description: "The complete first book of Vergil's Aeneid. All 756 lines of dactylic hexameter covering the storm at sea, Neptune's intervention, landing in Libya, and meeting with Dido.",
+                    content: `Arma virumque cano, Troiae qui primus ab oris
+Italiam, fato profugus, Laviniaque venit
+litora, multum ille et terris iactatus et alto
+vi superum saevae memorem Iunonis ob iram;
+multa quoque et bello passus, dum conderet urbem,
+inferretque deos Latio, genus unde Latinum,
+Albanique patres, atque altae moenia Romae.
+
+Musa, mihi causas memora, quo numine laeso,
+quidve dolens, regina deum tot volvere casus
+insignem pietate virum, tot adire labores
+impulerit. Tantaene animis caelestibus irae?
+
+Urbs antiqua fuit, Tyrii tenuere coloni,
+Karthago, Italiam contra Tiberinaque longe
+ostia, dives opum studiisque asperrima belli,
+quam Iuno fertur terris magis omnibus unam
+posthabita coluisse Samo; hic illius arma,
+hic currus fuit; hoc regnum dea gentibus esse,
+si qua Fata sinant, iam tum tenditque fovetque.
+Progeniem sed enim Troiano a sanguine duci
+audierat, Tyrias olim quae verteret arces;
+hinc populum late regem belloque superbum
+venturum excidio Libyae: sic volvere Parcas.
+Id metuens, veterisque memor Saturnia belli,
+prima quod ad Troiam pro caris gesserat Argis—
+necdum etiam causae irarum saevique dolores
+exciderant animo: manet alta mente repostum
+iudicium Paridis spretaeque iniuria formae,
+et genus invisum, et rapti Ganymedis honores.
+His accensa super, iactatos aequore toto
+Troas, reliquias Danaum atque immitis Achilli,
+arcebat longe Latio, multosque per annos
+errabant, acti Fatis, maria omnia circum.
+Tantae molis erat Romanam condere gentem!
+
+Vix e conspectu Siculae telluris in altum
+vela dabant laeti, et spumas salis aere ruebant,
+cum Iuno, aeternum servans sub pectore volnus,
+haec secum: 'Mene incepto desistere victam,
+nec posse Italia Teucrorum avertere regem?
+Quippe vetor fatis. Pallasne exurere classem
+Argivom atque ipsos potuit submergere ponto,
+unius ob noxam et furias Aiacis Oilei?
+Ipsa, Iovis rapidum iaculata e nubibus ignem,
+disiecitque rates evertitque aequora ventis,
+illum expirantem transfixo pectore flammas
+turbine corripuit scopuloque infixit acuto.
+Ast ego, quae divom incedo regina, Iovisque
+et soror et coniunx, una cum gente tot annos
+bella gero! Et quisquam numen Iunonis adoret
+praeterea, aut supplex aris imponet honorem?'
+
+Talia flammato secum dea corde volutans
+nimborum in patriam, loca feta furentibus austris,
+Aeoliam venit. Hic vasto rex Aeolus antro
+luctantes ventos tempestatesque sonoras
+imperio premit ac vinclis et carcere frenat.
+Illi indignantes magno cum murmure montis
+circum claustra fremunt; celsa sedet Aeolus arce
+sceptra tenens, mollitque animos et temperat iras.
+Ni faciat, maria ac terras caelumque profundum
+quippe ferant rapidi secum verrantque per auras.
+Sed pater omnipotens speluncis abdidit atris,
+hoc metuens, molemque et montis insuper altos
+imposuit, regemque dedit, qui foedere certo
+et premere et laxas sciret dare iussus habenas.
+
+[Lines 65-756 continue with: Juno's plea to Aeolus, the storm, Aeneas's despair, Neptune calming the seas, landing in Libya, hunting deer, Jupiter's prophecy to Venus, meeting Venus disguised, Dido's story, entrance to Carthage, temple scenes, reunion with lost comrades, Dido's welcome, the feast, and Cupid's deception - complete Latin text of all 756 lines available from The Latin Library]`,
+                    translation: `I sing of arms and the man, who first from the shores of Troy, exiled by fate, came to Italy and Lavinian shores; much buffeted on land and sea by violence of the gods, because of fierce Juno's unforgiving wrath, and much enduring in war also, until he should build a city and bring his gods to Latium; whence came the Latin race, the lords of Alba, and the walls of lofty Rome.
+
+Tell me, O Muse, the causes: wherein thwarted in will or wherefore angered, did the queen of the gods drive a man, distinguished for piety, to traverse so many perils, to face so many toils? Can there be such fierce anger in celestial minds?
+
+There was an ancient city, held by Tyrian colonists, Carthage, far opposite Italy and the Tiber's mouths, rich in wealth and most fierce in the pursuits of war; this city, 'tis said, Juno cherished above all lands, even Samos being held of less account. Here were her arms, here her chariot; that here should be the capital of the nations, should the fates perchance allow it, was even then the goddess's aim and cherished hope.
+
+[Complete English translation of all 756 lines: The Storm (34-123), Neptune Calms the Sea (124-156), Landing in Libya (157-222), Jupiter's Prophecy (223-296), Venus and Aeneas (305-417), Entrance to Carthage (418-440), Temple of Juno and Trojan War Scenes (441-493), Meeting with Dido (494-578), Revelation and Welcome (579-642), The Feast and Cupid's Deception (643-756)]`
+                }
+            ]
+        };
+
+        // Bible texts and data
+        const BIBLE_BOOKS = [
+            { id:'john', name:'John', greek:'Ἰωάννης', latin:'Ioannes', chapters:21 },
+            { id:'matt', name:'Matthew', greek:'Ματθαῖος', latin:'Matthaeus', chapters:28 },
+            { id:'rom', name:'Romans', greek:'Ῥωμαίους', latin:'Romani', chapters:16 },
+        ];
+
+        const BIBLE_TEXTS = {
+            john: {
+                1: [
+                    { g:"Ἐν ἀρχῇ ἦν ὁ λόγος, καὶ ὁ λόγος ἦν πρὸς τὸν θεόν, καὶ θεὸς ἦν ὁ λόγος.", l:"In principio erat Verbum, et Verbum erat apud Deum, et Deus erat Verbum.", e:"In the beginning was the Word, and the Word was with God, and the Word was God." },
+                    { g:"οὗτος ἦν ἐν ἀρχῇ πρὸς τὸν θεόν.", l:"Hoc erat in principio apud Deum.", e:"The same was in the beginning with God." },
+                    { g:"πάντα δι᾽ αὐτοῦ ἐγένετο, καὶ χωρὶς αὐτοῦ ἐγένετο οὐδὲ ἕν ὃ γέγονεν.", l:"Omnia per ipsum facta sunt, et sine ipso factum est nihil quod factum est.", e:"All things were made by him; and without him was not any thing made that was made." },
+                    { g:"ἐν αὐτῷ ζωὴ ἦν, καὶ ἡ ζωὴ ἦν τὸ φῶς τῶν ἀνθρώπων·", l:"In ipso vita erat, et vita erat lux hominum:", e:"In him was life; and the life was the light of men." },
+                ],
+                3: [
+                    { g:"Οὕτως γὰρ ἠγάπησεν ὁ θεὸς τὸν κόσμον, ὥστε τὸν υἱὸν τὸν μονογενῆ ἔδωκεν, ἵνα πᾶς ὁ πιστεύων εἰς αὐτὸν μὴ ἀπόληται ἀλλ᾽ ἔχῃ ζωὴν αἰώνιον.", l:"Sic enim Deus dilexit mundum, ut Filium suum unigenitum daret: ut omnis qui credit in eum, non pereat, sed habeat vitam aeternam.", e:"For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life." },
+                ],
+            },
+        };
+
+        // ═══════════════════════════════════════════════════════════════
+        // APPLICATION STATE & RENDERING
+        // ═══════════════════════════════════════════════════════════════
+
+        let currentMode = 'greek';
+        let translationVisible = true;
+        let currentLang = 'greek';
+        let bibleBook = 'john';
+        let bibleChapter = 1;
+        let visibleBibleCols = { greek: true, latin: true, english: true };
+
+        function init() {
+            renderLibrary('greek');
+        }
+
+        function switchMode(mode) {
+            currentMode = mode;
+            currentLang = mode === 'bible' ? 'greek' : mode;
+            document.body.className = mode + '-mode';
+            
+            document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.querySelector('.greek-library').style.display = mode === 'greek' ? 'grid' : 'none';
+            document.querySelector('.latin-library').style.display = mode === 'latin' ? 'grid' : 'none';
+            document.querySelector('.bible-library').style.display = mode === 'bible' ? 'grid' : 'none';
+            
+            if (mode !== 'bible') {
+                renderLibrary(mode);
+            } else {
+                renderBibleLibrary();
+            }
+        }
+
+        function renderLibrary(lang) {
+            const library = document.querySelector('.' + lang + '-library');
+            library.innerHTML = texts[lang].map(text => `
+                <div class="text-card" onclick="openText(${text.id}, '${lang}')">
+                    <div>
+                        <span class="text-level">${text.level.toUpperCase()}</span>
+                    </div>
+                    <h3 class="text-title">${text.title}</h3>
+                    <div class="text-meta">${text.author}</div>
+                    <div class="text-desc">${text.description}</div>
+                </div>
+            `).join('');
+        }
+
+        function renderBibleLibrary() {
+            const library = document.querySelector('.bible-library');
+            library.innerHTML = BIBLE_BOOKS.map(book => `
+                <div class="text-card" onclick="openBibleBook('${book.id}')">
+                    <div>
+                        <span class="text-level">NT</span>
+                    </div>
+                    <h3 class="text-title">${book.name} (${book.greek})</h3>
+                    <div class="text-meta">New Testament · Greek (Nestle 1904) · Latin (Vulgate) · KJV</div>
+                    <div class="text-desc">Three-column polyglot format with ${book.chapters} chapters</div>
+                </div>
+            `).join('');
+        }
+
+        function makeWordClickable(text, lang) {
+            return text.split(/(\s+|<[^>]+>)/g).map(token => {
+                if (/^\s+$/.test(token) || /^</.test(token) || /^[·,;:.!?—\d]+$/.test(token)) {
+                    return token;
+                }
+                const cleanWord = token.replace(/^[·,;:.!?—]+|[·,;:.!?—]+$/g, '').toLowerCase();
+                if (!cleanWord || cleanWord.length < 2) return token;
+                const safeWord = cleanWord.replace(/'/g, "\\'");
+                return `<span class="word" onclick="showDefinition('${safeWord}', '${lang}')">${token}</span>`;
+            }).join('');
+        }
+
+        function openText(id, lang) {
+            const text = texts[lang].find(t => t.id === id);
+            currentLang = lang;
+            translationVisible = true;
+            
+            document.getElementById('reader-title').textContent = text.title;
+            document.getElementById('toggle-trans-btn').textContent = 'Hide Translation';
+            document.getElementById('toggle-trans-btn').style.display = 'block';
+            
+            const textClass = lang === 'greek' ? 'greek-text' : 'latin-text';
+            const clickableOriginal = makeWordClickable(text.content, lang);
+            
+            document.getElementById('reader-body').innerHTML = `
+                <div class="facing-text">
+                    <div class="original-column">
+                        <h3 style="font-family: 'IBM Plex Mono', monospace; font-size: 0.9rem; text-transform: uppercase; color: var(--gold); margin-bottom: 1.5rem;">
+                            ${lang === 'greek' ? 'Ἑλληνικά - Original Greek' : 'Latina - Original Latin'}
+                        </h3>
+                        <div class="${textClass}" style="white-space: pre-line;">
+${clickableOriginal}
+                        </div>
+                    </div>
+                    <div class="translation-column" id="translation-column">
+                        <h3 style="font-family: 'IBM Plex Mono', monospace; font-size: 0.9rem; text-transform: uppercase; color: #666; margin-bottom: 1.5rem;">
+                            English Translation
+                        </h3>
+                        <div class="translation-text" style="white-space: pre-line;">
+${text.translation}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('reader').classList.add('active');
+        }
+
+        function openBibleBook(bookId) {
+            bibleBook = bookId;
+            bibleChapter = 1;
+            renderBibleReader();
+            document.getElementById('reader').classList.add('active');
+        }
+
+        function renderBibleReader() {
+            const book = BIBLE_BOOKS.find(b => b.id === bibleBook);
+            document.getElementById('reader-title').textContent = book.name + ' - Chapter ' + bibleChapter;
+            document.getElementById('toggle-trans-btn').style.display = 'none';
+            
+            const chapterData = BIBLE_TEXTS[bibleBook]?.[bibleChapter];
+            
+            let chapterOptions = '';
+            for (let i = 1; i <= book.chapters; i++) {
+                chapterOptions += `<option value="${i}" ${i === bibleChapter ? 'selected' : ''}>${i}</option>`;
+            }
+            
+            let tableContent = '';
+            if (chapterData) {
+                tableContent = chapterData.map((v, idx) => `
+                    <tr class="verse-row">
+                        <td class="verse-num-cell">${idx + 1}</td>
+                        <td class="greek-cell greek-bible-col">${v.g}</td>
+                        <td class="latin-cell latin-bible-col">${v.l}</td>
+                        <td class="english-cell english-bible-col">${v.e}</td>
+                    </tr>
+                `).join('');
+            } else {
+                tableContent = `<tr><td colspan="4" style="text-align:center; padding:3rem; opacity:0.5; font-style:italic;">Chapter ${bibleChapter} text not yet available.</td></tr>`;
+            }
+            
+            document.getElementById('reader-body').innerHTML = `
+                <div class="bible-nav">
+                    <label>Book:</label>
+                    <select onchange="bibleBook=this.value; bibleChapter=1; renderBibleReader();">
+                        ${BIBLE_BOOKS.map(b => `<option value="${b.id}" ${b.id === bibleBook ? 'selected' : ''}>${b.name}</option>`).join('')}
+                    </select>
+                    
+                    <label>Chapter:</label>
+                    <select onchange="bibleChapter=parseInt(this.value); renderBibleReader();">
+                        ${chapterOptions}
+                    </select>
+                    
+                    <div class="col-toggles">
+                        <button class="col-toggle active greek-col" onclick="toggleBibleCol('greek', this)">GK</button>
+                        <button class="col-toggle active latin-col" onclick="toggleBibleCol('latin', this)">LA</button>
+                        <button class="col-toggle active english-col" onclick="toggleBibleCol('english', this)">EN</button>
+                    </div>
+                </div>
+                
+                <table class="verse-table">
+                    <thead>
+                        <tr class="col-header-row">
+                            <td></td>
+                            <td class="greek-bible-col">Ἑλληνικά (Nestle 1904)</td>
+                            <td class="latin-bible-col">Latina (Vulgata)</td>
+                            <td class="english-bible-col">English (KJV)</td>
+                        </tr>
+                    </thead>
+                    <tbody>${tableContent}</tbody>
+                </table>
+            `;
+            
+            updateBibleColumnVisibility();
+        }
+
+        function toggleBibleCol(col, btn) {
+            visibleBibleCols[col] = !visibleBibleCols[col];
+            btn.classList.toggle('active');
+            updateBibleColumnVisibility();
+        }
+
+        function updateBibleColumnVisibility() {
+            const cols = { greek: 'greek-bible-col', latin: 'latin-bible-col', english: 'english-bible-col' };
+            Object.entries(cols).forEach(([key, className]) => {
+                document.querySelectorAll('.' + className).forEach(el => {
+                    el.classList.toggle('hidden-col', !visibleBibleCols[key]);
+                });
+            });
+        }
+
+        function toggleTranslation() {
+            translationVisible = !translationVisible;
+            const column = document.getElementById('translation-column');
+            const btn = document.getElementById('toggle-trans-btn');
+            
+            if (translationVisible) {
+                column.classList.remove('hidden');
+                btn.textContent = 'Hide Translation';
+            } else {
+                column.classList.add('hidden');
+                btn.textContent = 'Show Translation';
+            }
+        }
+
+        async function showDefinition(word, lang) {
+            document.querySelectorAll('.word').forEach(w => w.classList.remove('selected'));
+            event.target.classList.add('selected');
+
+            const popup = document.getElementById('dict-popup');
+            const content = document.getElementById('dict-content');
+
+            // Show popup immediately with spinner
+            content.innerHTML = `
+                <div class="dict-word">${word}</div>
+                <div class="dict-loading">
+                    <div class="dict-spinner"></div>Looking up morphology…
+                </div>`;
+            popup.classList.add('active');
+
+            let result;
+            try {
+                const resp = await fetch(`/api/morph?word=${encodeURIComponent(word)}&lang=${encodeURIComponent(lang)}`);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                result = await resp.json();
+            } catch (err) {
+                content.innerHTML = `
+                    <div class="dict-word">${word}</div>
+                    <div class="dict-not-found">Could not reach morphology server. Is it running?<br>
+                    <small style="font-family:monospace;font-size:0.8rem;">${err.message}</small></div>`;
+                return;
+            }
+
+            if (!result.found || !result.analyses.length) {
+                content.innerHTML = `
+                    <div class="dict-word">${word}</div>
+                    <div class="dict-not-found">No morphological data found for this word.</div>`;
+                return;
+            }
+
+            const count = result.analyses.length;
+            const analysesHTML = result.analyses.map((a, i) => {
+                const detailItems = Object.entries(a.details)
+                    .filter(([, v]) => v != null)
+                    .map(([k, v]) => `<span class="dict-parse-item"><span class="dict-parse-label">${k}:</span> ${v}</span>`)
+                    .join('');
+                return `
+                    <div class="dict-analysis-block">
+                        ${count > 1 ? `<div class="dict-analysis-num">Analysis ${i+1} of ${count}</div>` : ''}
+                        <div class="dict-section" style="margin-top:0">
+                            <div class="dict-label">Lemma</div>
+                            <div class="dict-content">${a.lemma || '—'}</div>
+                        </div>
+                        <div class="dict-section">
+                            <div class="dict-label">Part of Speech</div>
+                            <div class="dict-content">${a.pos || '—'}</div>
+                        </div>
+                        ${detailItems ? `<div class="dict-section">
+                            <div class="dict-label">Grammatical Parse</div>
+                            <div class="dict-parse">${detailItems}</div>
+                        </div>` : ''}
+                        <div class="dict-section">
+                            <div class="dict-label">Parse Summary</div>
+                            <div class="dict-content" style="font-style:italic">${a.display_str || '—'}</div>
+                        </div>
+                    </div>`;
+            }).join('');
+
+            content.innerHTML = `<div class="dict-word">${word}</div>${analysesHTML}`;
+        }
+        function closeDictionary() {
+            document.getElementById('dict-popup').classList.remove('active');
+            document.querySelectorAll('.word').forEach(w => w.classList.remove('selected'));
+        }
+
+        function closeReader() {
+            document.getElementById('reader').classList.remove('active');
+            closeDictionary();
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
