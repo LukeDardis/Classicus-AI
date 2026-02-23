@@ -1,6 +1,6 @@
 """
 Flask server for Classicus AI.
-  /           → serves classicus-ai-final.html
+  /           → serves index.html
   /api/morph  → morphological analysis via Perseus + SQLite cache
 """
 
@@ -16,7 +16,7 @@ engine = MorphologyEngine(db_path=Path(__file__).parent / 'morphology.db')
 
 @app.route('/')
 def index():
-    return send_file(Path(__file__).parent / 'classicus-ai-final.html')
+    return send_file(Path(__file__).parent / 'index.html')
 
 
 @app.route('/api/morph')
