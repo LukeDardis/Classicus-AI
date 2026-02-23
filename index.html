@@ -282,15 +282,16 @@
         /* DICTIONARY POPUP */
         .dictionary-popup {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            width: 340px;
+            max-height: 55vh;
             background: white;
-            border-top: 3px solid var(--gold);
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
-            max-height: 50vh;
+            border: 2px solid var(--gold);
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
             overflow-y: auto;
-            padding: 2rem;
+            padding: 1.25rem 1.5rem 1.5rem;
             display: none;
             z-index: 2000;
         }
@@ -300,12 +301,12 @@
         }
 
         .dict-close {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            background: #ddd;
+            position: sticky;
+            top: 0;
+            float: right;
+            background: #eee;
             border: none;
-            padding: 0.5rem 1rem;
+            padding: 0.25rem 0.6rem;
             cursor: pointer;
             border-radius: 4px;
             font-weight: 600;
@@ -559,6 +560,22 @@
             text-align: center;
             padding: 3rem;
             opacity: 0.6;
+        }
+        .psalm-response {
+            font-style: italic;
+            color: var(--gold);
+            font-weight: 600;
+            text-align: center;
+            padding: 0.4rem 1rem;
+            margin: 0.75rem 0;
+            border-left: 3px solid var(--gold);
+            background: rgba(201,168,76,0.07);
+            border-radius: 0 4px 4px 0;
+        }
+        .psalm-verse {
+            margin-bottom: 0.6rem;
+            line-height: 1.9;
+            padding-left: 0.25rem;
         }
         .mass-offline {
             grid-column: 1 / -1;
@@ -5336,14 +5353,15 @@ ${text.translation}
         // ── Citation parsing: "Jn 6:51-58" → {bookId, chapter, v1, v2} ───────
         const _BOOK_ABBREV = {
             'jn':'john','joh':'john','john':'john',
-            'mt':'matthew','mat':'matthew','matt':'matthew',
+            'mt':'matthew','mat':'matthew','matt':'matthew','matthew':'matthew',
             'mk':'mark','mar':'mark','mark':'mark',
             'lk':'luke','luk':'luke','luke':'luke'
         };
 
         function parseMassSource(source) {
             if (!source) return null;
-            const m = source.match(/^(\w+)\s+(\d+):(\d+)(?:[–\-](\d+))?/);
+            // Handle any dash/hyphen variant Universalis may use (U+002D, U+2010, U+2013, U+2014)
+            const m = source.match(/^(\w+)\s+(\d+):(\d+)(?:[\u002D\u2010\u2012\u2013\u2014](\d+))?/);
             if (!m) return null;
             const bookId = _BOOK_ABBREV[m[1].toLowerCase()];
             if (!bookId) return null;
@@ -5432,6 +5450,38 @@ ${text.translation}
                 `).join('')}`;
         }
 
+        function formatMassText(text, type) {
+            if (type === 'Mass_Ps') {
+                // Psalm: lines wrapped in _..._ are the antiphon/response; rest are verses
+                const lines = text.split('\n');
+                let html = '';
+                let verseLines = [];
+                const flushVerses = () => {
+                    if (verseLines.length) {
+                        html += `<p class="psalm-verse">${verseLines.join('<br>')}</p>`;
+                        verseLines = [];
+                    }
+                };
+                for (const line of lines) {
+                    const t = line.trim();
+                    if (!t) { flushVerses(); continue; }
+                    const rm = t.match(/^_(.+)_$/);
+                    if (rm) {
+                        flushVerses();
+                        html += `<p class="psalm-response">${rm[1]}</p>`;
+                    } else {
+                        verseLines.push(t);
+                    }
+                }
+                flushVerses();
+                return html;
+            }
+            // Default: paragraph per double-newline block
+            return text.split(/\n\n+/).filter(b => b.trim())
+                .map(b => `<p style="margin-bottom:1rem;">${b.replace(/\n/g, '<br>').trim()}</p>`)
+                .join('');
+        }
+
         function openMassReading(idx) {
             const reading = currentMassReadings[idx];
             if (!reading) return;
@@ -5458,8 +5508,7 @@ ${text.translation}
                     <p style="opacity:0.5;font-style:italic;font-size:0.95rem;line-height:1.8;">Greek text not available for this passage in the current corpus.</p>`;
             }
 
-            const englishParas = reading.text.split(/\n+/).filter(l => l.trim())
-                .map(l => `<p style="margin-bottom:1rem;">${l.trim()}</p>`).join('');
+            const englishParas = formatMassText(reading.text, reading.type);
 
             const total = currentMassReadings.length;
             const navHTML = total > 1 ? `
