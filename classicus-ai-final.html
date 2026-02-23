@@ -952,10 +952,10 @@ Long ago, Catiline, you ought to have been led to death by the consul's command,
                 },
                 {
                     id: 6,
-                    title: "Vergil's Aeneid - Book I (COMPLETE - All 756 Lines)",
+                    title: "Vergil's Aeneid - Book I (Opening, Lines 1–80)",
                     author: "Publius Vergilius Maro (70-19 BC)",
                     level: "advanced",
-                    description: "The complete first book of Vergil's Aeneid. All 756 lines of dactylic hexameter covering the storm at sea, Neptune's intervention, landing in Libya, and meeting with Dido.",
+                    description: "The opening of Vergil's Aeneid. Dactylic hexameter covering the invocation, Juno's wrath, the Trojans at sea, and the introduction of Aeolus.",
                     content: `Arma virumque cano, Troiae qui primus ab oris
 Italiam, fato profugus, Laviniaque venit
 litora, multum ille et terris iactatus et alto
@@ -1022,16 +1022,20 @@ quippe ferant rapidi secum verrantque per auras.
 Sed pater omnipotens speluncis abdidit atris,
 hoc metuens, molemque et montis insuper altos
 imposuit, regemque dedit, qui foedere certo
-et premere et laxas sciret dare iussus habenas.
-
-[Lines 65-756 continue with: Juno's plea to Aeolus, the storm, Aeneas's despair, Neptune calming the seas, landing in Libya, hunting deer, Jupiter's prophecy to Venus, meeting Venus disguised, Dido's story, entrance to Carthage, temple scenes, reunion with lost comrades, Dido's welcome, the feast, and Cupid's deception - complete Latin text of all 756 lines available from The Latin Library]`,
+et premere et laxas sciret dare iussus habenas.`,
                     translation: `I sing of arms and the man, who first from the shores of Troy, exiled by fate, came to Italy and Lavinian shores; much buffeted on land and sea by violence of the gods, because of fierce Juno's unforgiving wrath, and much enduring in war also, until he should build a city and bring his gods to Latium; whence came the Latin race, the lords of Alba, and the walls of lofty Rome.
 
 Tell me, O Muse, the causes: wherein thwarted in will or wherefore angered, did the queen of the gods drive a man, distinguished for piety, to traverse so many perils, to face so many toils? Can there be such fierce anger in celestial minds?
 
 There was an ancient city, held by Tyrian colonists, Carthage, far opposite Italy and the Tiber's mouths, rich in wealth and most fierce in the pursuits of war; this city, 'tis said, Juno cherished above all lands, even Samos being held of less account. Here were her arms, here her chariot; that here should be the capital of the nations, should the fates perchance allow it, was even then the goddess's aim and cherished hope.
 
-[Complete English translation of all 756 lines: The Storm (34-123), Neptune Calms the Sea (124-156), Landing in Libya (157-222), Jupiter's Prophecy (223-296), Venus and Aeneas (305-417), Entrance to Carthage (418-440), Temple of Juno and Trojan War Scenes (441-493), Meeting with Dido (494-578), Revelation and Welcome (579-642), The Feast and Cupid's Deception (643-756)]`
+Fearing this, and mindful too of the old war that she had waged for her beloved Argos at Troy—nor had the causes of her wrath and the sharp pain of her resentment yet faded from her mind; deep in her heart there lay stored the judgment of Paris, the slight to her scorned beauty, her hatred of that race, and the honors heaped on ravished Ganymede.
+
+Inflamed by these wrongs, she kept the Trojans—the remnant left by the Greeks and pitiless Achilles—tossed across the whole face of the sea, far from Latium; and for many years they wandered, driven by the Fates, around all the seas. So great was the effort to found the Roman race!
+
+Scarcely out of sight of Sicilian land on the open deep, they were joyfully spreading sail and churning the salt sea-foam with brazen prows, when Juno, nursing her undying wound deep in her breast, said to herself: "Am I to give up, conquered, and fail to keep the Trojan king from reaching Italy? The Fates forbid me, forsooth! Was Pallas able to burn the Argive fleet and drown the men in the sea, because of one man's guilt, the mad crime of Ajax, son of Oileus? She herself hurled Jupiter's swift fire from the clouds, shattered the ships and overturned the seas with storms; Ajax, breathing flames from his pierced breast, she swept up in a whirlwind and impaled on a pointed crag. But I, who walk as queen of the gods, both sister and wife of Jove, have waged war with a single nation for so many years! And will anyone worship the godhead of Juno hereafter, or lay a suppliant offering on her altars?"
+
+Revolving such thoughts in her inflamed heart, the goddess came to Aeolia, the land of storm clouds, a region teeming with raging south winds. Here in a vast cavern king Aeolus rules the wrestling winds and the roaring gales, and tames them with chains and imprisonment. They chafe indignantly with great roaring around their prison barriers; Aeolus sits in his lofty citadel holding his scepter, calming their spirits and tempering their rage. Were he not to do so, they would surely sweep along with them seas and lands and the vault of heaven, and whirl them through the air. But the almighty Father, fearing this, hid them in dark caverns, heaped over them the mass of high mountains, and gave them a king who, under fixed covenant, should know both how to tighten and, at command, to slacken the reins.`
                 }
             ]
         };
@@ -5312,8 +5316,12 @@ ${text.translation}
                     resolve(data);
                 };
 
+                const today = new Date();
+                const dateStr = today.getFullYear().toString()
+                    + String(today.getMonth() + 1).padStart(2, '0')
+                    + String(today.getDate()).padStart(2, '0');
                 const script = document.createElement('script');
-                script.src = 'https://universalis.com/Europe.England/jsonpmass.js?callback=' + cbName;
+                script.src = 'https://universalis.com/Europe.England/' + dateStr + '/jsonpmass.js?callback=' + cbName;
                 script.onerror = () => {
                     clearTimeout(timeoutId);
                     delete window[cbName];
@@ -5378,19 +5386,26 @@ ${text.translation}
                 return;
             }
 
-            const mass = massData.Mass || massData;
-            const today = mass.Title || 'Daily Mass';
+            const d = massData;
+            const todayLabel = d.date || d.day || 'Daily Mass';
             currentMassReadings = [];
 
-            for (const key of ['Reading1', 'Psalm', 'Reading2', 'Gospel']) {
-                if (!mass[key]) continue;
-                const r = mass[key];
-                const src = r.source || r.Source || '';
-                const txt = (r.text || r.Text || '').replace(/<[^>]+>/g, '').trim();
+            // Actual Universalis field names: Mass_R1, Mass_R2, Mass_Ps, Mass_GA, Mass_G
+            const READING_KEYS = [
+                { key: 'Mass_R1', label: 'First Reading' },
+                { key: 'Mass_R2', label: 'Second Reading' },
+                { key: 'Mass_Ps', label: 'Responsorial Psalm' },
+                { key: 'Mass_G',  label: 'Gospel' }
+            ];
+            for (const { key, label } of READING_KEYS) {
+                if (!d[key]) continue;
+                const r = d[key];
+                const src = r.source || '';
+                const txt = (r.text || '').replace(/<[^>]+>/g, '').trim();
                 const citation = parseMassSource(src);
                 currentMassReadings.push({
                     type: key,
-                    heading: r.heading || r.Heading || _READING_LABELS[key],
+                    heading: r.heading || label,
                     source: src,
                     text: txt,
                     hasGreek: !!lookupGreekVerses(citation)
@@ -5399,12 +5414,12 @@ ${text.translation}
 
             library.innerHTML = `
                 <div class="text-card" style="border-left-color:var(--gold);cursor:default;pointer-events:none;">
-                    <div class="text-title" style="color:var(--gold);">📿 ${today}</div>
+                    <div class="text-title" style="color:var(--gold);">📿 ${todayLabel}</div>
                     <div class="text-meta">Today's Mass Readings · Universalis</div>
                 </div>
                 ${currentMassReadings.map((r, i) => `
                     <div class="text-card" onclick="openMassReading(${i})">
-                        <div><span class="reading-card-badge">${_READING_LABELS[r.type] || r.type}</span></div>
+                        <div><span class="reading-card-badge">${r.heading}</span></div>
                         <h3 class="text-title">${r.heading}</h3>
                         <div class="text-meta">${r.source}</div>
                         <div style="margin-top:0.5rem;">
