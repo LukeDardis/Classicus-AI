@@ -5377,6 +5377,24 @@ ${text.translation}
             return result.length ? result : null;
         }
 
+        // ── HTML helpers ─────────────────────────────────────────────────────
+        function decodeHTMLEntities(str) {
+            if (!str) return '';
+            const ta = document.createElement('textarea');
+            ta.innerHTML = str;
+            return ta.value;
+        }
+
+        function decodeAndStrip(html) {
+            if (!html) return '';
+            const tmp = document.createElement('div');
+            tmp.innerHTML = html
+                .replace(/<br\s*\/?>/gi, '\n')
+                .replace(/<\/p>/gi, '\n\n')
+                .replace(/<\/div>/gi, '\n');
+            return tmp.textContent.replace(/\n{3,}/g, '\n\n').trim();
+        }
+
         // ── Mass Library ─────────────────────────────────────────────────────
         const _READING_LABELS = {
             Reading1: 'First Reading', Psalm: 'Responsorial Psalm',
@@ -5418,14 +5436,17 @@ ${text.translation}
             for (const { key, label } of READING_KEYS) {
                 if (!d[key]) continue;
                 const r = d[key];
-                const src = r.source || '';
-                const txt = (r.text || '').replace(/<[^>]+>/g, '').trim();
+                const src = decodeHTMLEntities(r.source || '');
+                const heading = decodeHTMLEntities(r.heading || label);
+                const rawHTML = r.text || '';
+                const preview = decodeAndStrip(rawHTML).slice(0, 150);
                 const citation = parseMassSource(src);
                 currentMassReadings.push({
                     type: key,
-                    heading: r.heading || label,
+                    heading,
                     source: src,
-                    text: txt,
+                    rawHTML,
+                    preview,
                     hasGreek: !!lookupGreekVerses(citation)
                 });
             }
@@ -5445,38 +5466,36 @@ ${text.translation}
                                 ? '<span style="color:var(--greek-primary);font-size:0.8rem;font-family:\'IBM Plex Mono\',monospace;">● Greek available</span>'
                                 : '<span style="opacity:0.4;font-size:0.8rem;font-family:\'IBM Plex Mono\',monospace;">○ English only</span>'}
                         </div>
-                        <div class="text-desc" style="margin-top:0.5rem;">${r.text.slice(0, 150)}…</div>
+                        <div class="text-desc" style="margin-top:0.5rem;">${r.preview}…</div>
                     </div>
                 `).join('')}`;
         }
 
-        function formatMassText(text, type) {
+        function formatMassText(rawHTML, type) {
             if (type === 'Mass_Ps') {
-                // Psalm: lines wrapped in _..._ are the antiphon/response; rest are verses
-                const lines = text.split('\n');
+                const tmp = document.createElement('div');
+                tmp.innerHTML = rawHTML;
                 let html = '';
-                let verseLines = [];
-                const flushVerses = () => {
-                    if (verseLines.length) {
-                        html += `<p class="psalm-verse">${verseLines.join('<br>')}</p>`;
-                        verseLines = [];
-                    }
-                };
-                for (const line of lines) {
-                    const t = line.trim();
-                    if (!t) { flushVerses(); continue; }
-                    const rm = t.match(/^_(.+)_$/);
-                    if (rm) {
-                        flushVerses();
-                        html += `<p class="psalm-response">${rm[1]}</p>`;
+                const divs = tmp.querySelectorAll('div');
+                if (divs.length === 0) {
+                    const text = decodeAndStrip(rawHTML);
+                    return text.split(/\n\n+/).filter(b => b.trim())
+                        .map(b => `<p class="psalm-verse">${b.replace(/\n/g, '<br>').trim()}</p>`)
+                        .join('');
+                }
+                for (const div of divs) {
+                    const iTag = div.querySelector('i');
+                    if (iTag) {
+                        html += `<p class="psalm-response">${iTag.textContent.trim()}</p>`;
                     } else {
-                        verseLines.push(t);
+                        const text = div.textContent.trim();
+                        if (text) html += `<p class="psalm-verse">${text.replace(/\n/g, '<br>')}</p>`;
                     }
                 }
-                flushVerses();
-                return html;
+                return html || `<p class="psalm-verse">${tmp.textContent.trim()}</p>`;
             }
-            // Default: paragraph per double-newline block
+            // Default: use DOM to properly decode entities and extract text
+            const text = decodeAndStrip(rawHTML);
             return text.split(/\n\n+/).filter(b => b.trim())
                 .map(b => `<p style="margin-bottom:1rem;">${b.replace(/\n/g, '<br>').trim()}</p>`)
                 .join('');
@@ -5508,7 +5527,7 @@ ${text.translation}
                     <p style="opacity:0.5;font-style:italic;font-size:0.95rem;line-height:1.8;">Greek text not available for this passage in the current corpus.</p>`;
             }
 
-            const englishParas = formatMassText(reading.text, reading.type);
+            const englishParas = formatMassText(reading.rawHTML, reading.type);
 
             const total = currentMassReadings.length;
             const navHTML = total > 1 ? `
