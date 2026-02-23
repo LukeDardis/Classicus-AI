@@ -488,6 +488,88 @@
             cursor: pointer;
         }
 
+        /* MASS MODE */
+        body.mass-mode { background: linear-gradient(135deg, #f4ede1, #ede0c8); }
+        body.mass-mode .text-card { border-left-color: var(--gold); }
+        body.mass-mode .text-title { color: var(--gold); }
+        body.mass-mode .text-level { background: var(--gold); }
+
+        /* CHAPTER / TEXT NAVIGATION */
+        .chapter-nav-btn {
+            padding: 0.4rem 1rem;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .chapter-nav-btn:hover:not(:disabled) { background: var(--ink); color: white; border-color: var(--ink); }
+        .chapter-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        .text-nav-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #eee;
+        }
+        .text-nav-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.75rem;
+            opacity: 0.5;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* MASS READING DISPLAY */
+        .col-heading {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 1.5rem;
+        }
+        .verse-para { margin-bottom: 0.75rem; line-height: 2; }
+        .verse-inline-num {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--gold);
+            vertical-align: super;
+            margin-right: 0.3rem;
+        }
+        .reading-card-badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            background: var(--gold);
+            color: white;
+            font-size: 0.7rem;
+            border-radius: 10px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+        .mass-loading {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 3rem;
+            opacity: 0.6;
+        }
+        .mass-offline {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 3rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border-left: 5px solid var(--gold);
+        }
+
         /* Mobile responsive */
         @media (max-width: 768px) {
             .facing-text {
@@ -520,6 +602,7 @@
             <button class="lang-btn active" onclick="switchMode('greek')">ἙΛΛΗΝΙΚΆ · Greek</button>
             <button class="lang-btn" onclick="switchMode('latin')">LATINA · Latin</button>
             <button class="lang-btn" onclick="switchMode('bible')">📖 Bible (Polyglot)</button>
+            <button class="lang-btn" onclick="switchMode('mass')">📿 Daily Mass</button>
         </div>
 
         <!-- Greek Library -->
@@ -530,6 +613,9 @@
 
         <!-- Bible Library -->
         <div class="library bible-library" style="display:none;"></div>
+
+        <!-- Mass Library -->
+        <div class="library mass-library" style="display:none;"></div>
     </div>
 
     <!-- Reader Modal -->
@@ -541,7 +627,7 @@
                     <button class="toggle-translation-btn" id="toggle-trans-btn" onclick="toggleTranslation()">
                         Hide Translation
                     </button>
-                    <button class="close-btn" onclick="closeReader()">✕ CLOSE</button>
+                    <button class="close-btn" onclick="closeReader()">← Back</button>
                 </div>
             </div>
             <div id="reader-body"></div>
@@ -4889,6 +4975,9 @@ There was an ancient city, held by Tyrian colonists, Carthage, far opposite Ital
         let bibleBook = 'john';
         let bibleChapter = 1;
         let visibleBibleCols = { greek: true, latin: true, english: true };
+        let currentTextId = null;
+        let currentTextLang = null;
+        let currentMassReadings = [];
 
         function init() {
             renderLibrary('greek');
@@ -4896,20 +4985,23 @@ There was an ancient city, held by Tyrian colonists, Carthage, far opposite Ital
 
         function switchMode(mode) {
             currentMode = mode;
-            currentLang = mode === 'bible' ? 'greek' : mode;
+            currentLang = (mode === 'bible' || mode === 'mass') ? 'greek' : mode;
             document.body.className = mode + '-mode';
-            
+
             document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
-            
+
             document.querySelector('.greek-library').style.display = mode === 'greek' ? 'grid' : 'none';
             document.querySelector('.latin-library').style.display = mode === 'latin' ? 'grid' : 'none';
             document.querySelector('.bible-library').style.display = mode === 'bible' ? 'grid' : 'none';
-            
-            if (mode !== 'bible') {
+            document.querySelector('.mass-library').style.display = mode === 'mass' ? 'grid' : 'none';
+
+            if (mode === 'greek' || mode === 'latin') {
                 renderLibrary(mode);
-            } else {
+            } else if (mode === 'bible') {
                 renderBibleLibrary();
+            } else if (mode === 'mass') {
+                renderMassLibrary();
             }
         }
 
@@ -4955,17 +5047,29 @@ There was an ancient city, held by Tyrian colonists, Carthage, far opposite Ital
 
         function openText(id, lang) {
             const text = texts[lang].find(t => t.id === id);
+            currentTextId = id;
+            currentTextLang = lang;
             currentLang = lang;
             translationVisible = true;
-            
+
             document.getElementById('reader-title').textContent = text.title;
             document.getElementById('toggle-trans-btn').textContent = 'Hide Translation';
             document.getElementById('toggle-trans-btn').style.display = 'block';
-            
+
             const textClass = lang === 'greek' ? 'greek-text' : 'latin-text';
             const clickableOriginal = makeWordClickable(text.content, lang);
-            
+
+            const allTexts = texts[lang];
+            const idx = allTexts.findIndex(t => t.id === id);
+            const hasPrev = idx > 0;
+            const hasNext = idx < allTexts.length - 1;
+
             document.getElementById('reader-body').innerHTML = `
+                <div class="text-nav-bar">
+                    <button class="chapter-nav-btn" onclick="prevText()" ${hasPrev ? '' : 'disabled'}>◄ Prev</button>
+                    <span class="text-nav-label">${idx + 1} of ${allTexts.length}</span>
+                    <button class="chapter-nav-btn" onclick="nextText()" ${hasNext ? '' : 'disabled'}>Next ►</button>
+                </div>
                 <div class="facing-text">
                     <div class="original-column">
                         <h3 style="font-family: 'IBM Plex Mono', monospace; font-size: 0.9rem; text-transform: uppercase; color: var(--gold); margin-bottom: 1.5rem;">
@@ -4985,8 +5089,20 @@ ${text.translation}
                     </div>
                 </div>
             `;
-            
+
             document.getElementById('reader').classList.add('active');
+        }
+
+        function prevText() {
+            const allTexts = texts[currentTextLang];
+            const idx = allTexts.findIndex(t => t.id === currentTextId);
+            if (idx > 0) openText(allTexts[idx - 1].id, currentTextLang);
+        }
+
+        function nextText() {
+            const allTexts = texts[currentTextLang];
+            const idx = allTexts.findIndex(t => t.id === currentTextId);
+            if (idx < allTexts.length - 1) openText(allTexts[idx + 1].id, currentTextLang);
         }
 
         function openBibleBook(bookId) {
@@ -5024,16 +5140,20 @@ ${text.translation}
             
             document.getElementById('reader-body').innerHTML = `
                 <div class="bible-nav">
+                    <button class="chapter-nav-btn" onclick="prevBibleChapter()" ${bibleChapter === 1 ? 'disabled' : ''}>◄ Prev</button>
+
                     <label>Book:</label>
                     <select onchange="bibleBook=this.value; bibleChapter=1; renderBibleReader();">
                         ${BIBLE_BOOKS.map(b => `<option value="${b.id}" ${b.id === bibleBook ? 'selected' : ''}>${b.name}</option>`).join('')}
                     </select>
-                    
+
                     <label>Chapter:</label>
                     <select onchange="bibleChapter=parseInt(this.value); renderBibleReader();">
                         ${chapterOptions}
                     </select>
-                    
+
+                    <button class="chapter-nav-btn" onclick="nextBibleChapter()" ${bibleChapter === book.chapters ? 'disabled' : ''}>Next ►</button>
+
                     <div class="col-toggles">
                         <button class="col-toggle active greek-col" onclick="toggleBibleCol('greek', this)">GK</button>
                         <button class="col-toggle active latin-col" onclick="toggleBibleCol('latin', this)">LA</button>
@@ -5165,6 +5285,186 @@ ${text.translation}
         function closeReader() {
             document.getElementById('reader').classList.remove('active');
             closeDictionary();
+        }
+
+        // ── Bible chapter navigation ─────────────────────────────────────────
+        function prevBibleChapter() {
+            if (bibleChapter > 1) { bibleChapter--; renderBibleReader(); document.getElementById('reader').scrollTop = 0; }
+        }
+
+        function nextBibleChapter() {
+            const book = BIBLE_BOOKS.find(b => b.id === bibleBook);
+            if (book && bibleChapter < book.chapters) { bibleChapter++; renderBibleReader(); document.getElementById('reader').scrollTop = 0; }
+        }
+
+        // ── Universalis JSONP fetch ───────────────────────────────────────────
+        function fetchUniversalisReadings() {
+            return new Promise((resolve, reject) => {
+                const cbName = 'universalisCallback_' + Date.now();
+                const timeoutId = setTimeout(() => {
+                    delete window[cbName];
+                    reject(new Error('timeout'));
+                }, 10000);
+
+                window[cbName] = (data) => {
+                    clearTimeout(timeoutId);
+                    delete window[cbName];
+                    resolve(data);
+                };
+
+                const script = document.createElement('script');
+                script.src = 'https://universalis.com/Europe.England/jsonpmass.js?callback=' + cbName;
+                script.onerror = () => {
+                    clearTimeout(timeoutId);
+                    delete window[cbName];
+                    if (script.parentNode) script.parentNode.removeChild(script);
+                    reject(new Error('network error'));
+                };
+                script.onload = () => { if (script.parentNode) script.parentNode.removeChild(script); };
+                document.head.appendChild(script);
+            });
+        }
+
+        // ── Citation parsing: "Jn 6:51-58" → {bookId, chapter, v1, v2} ───────
+        const _BOOK_ABBREV = {
+            'jn':'john','joh':'john','john':'john',
+            'mt':'matthew','mat':'matthew','matt':'matthew',
+            'mk':'mark','mar':'mark','mark':'mark',
+            'lk':'luke','luk':'luke','luke':'luke'
+        };
+
+        function parseMassSource(source) {
+            if (!source) return null;
+            const m = source.match(/^(\w+)\s+(\d+):(\d+)(?:[–\-](\d+))?/);
+            if (!m) return null;
+            const bookId = _BOOK_ABBREV[m[1].toLowerCase()];
+            if (!bookId) return null;
+            return { bookId, chapter: parseInt(m[2]), v1: parseInt(m[3]), v2: m[4] ? parseInt(m[4]) : parseInt(m[3]) };
+        }
+
+        function lookupGreekVerses(citation) {
+            if (!citation) return null;
+            const { bookId, chapter, v1, v2 } = citation;
+            const chData = (BIBLE_TEXTS[bookId] || {})[chapter];
+            if (!chData) return null;
+            const result = chData.slice(v1 - 1, v2);
+            return result.length ? result : null;
+        }
+
+        // ── Mass Library ─────────────────────────────────────────────────────
+        const _READING_LABELS = {
+            Reading1: 'First Reading', Psalm: 'Responsorial Psalm',
+            Reading2: 'Second Reading', Gospel: 'Gospel'
+        };
+
+        async function renderMassLibrary() {
+            const library = document.querySelector('.mass-library');
+            library.innerHTML = `
+                <div class="mass-loading">
+                    <div class="dict-spinner" style="width:28px;height:28px;border-width:4px;margin:0 auto 1rem;"></div>
+                    <p style="font-family:'IBM Plex Mono',monospace; font-size:0.9rem;">Loading today's Mass readings…</p>
+                </div>`;
+
+            let massData;
+            try {
+                massData = await fetchUniversalisReadings();
+            } catch (e) {
+                library.innerHTML = `
+                    <div class="mass-offline">
+                        <div class="text-title" style="color:var(--gold);margin-bottom:1rem;">📿 Daily Mass Readings</div>
+                        <p style="opacity:0.7;margin-bottom:1.5rem;">Today's readings are unavailable. Please check your internet connection and try again.</p>
+                        <button class="back-btn" onclick="renderMassLibrary()">Try Again</button>
+                    </div>`;
+                return;
+            }
+
+            const mass = massData.Mass || massData;
+            const today = mass.Title || 'Daily Mass';
+            currentMassReadings = [];
+
+            for (const key of ['Reading1', 'Psalm', 'Reading2', 'Gospel']) {
+                if (!mass[key]) continue;
+                const r = mass[key];
+                const src = r.source || r.Source || '';
+                const txt = (r.text || r.Text || '').replace(/<[^>]+>/g, '').trim();
+                const citation = parseMassSource(src);
+                currentMassReadings.push({
+                    type: key,
+                    heading: r.heading || r.Heading || _READING_LABELS[key],
+                    source: src,
+                    text: txt,
+                    hasGreek: !!lookupGreekVerses(citation)
+                });
+            }
+
+            library.innerHTML = `
+                <div class="text-card" style="border-left-color:var(--gold);cursor:default;pointer-events:none;">
+                    <div class="text-title" style="color:var(--gold);">📿 ${today}</div>
+                    <div class="text-meta">Today's Mass Readings · Universalis</div>
+                </div>
+                ${currentMassReadings.map((r, i) => `
+                    <div class="text-card" onclick="openMassReading(${i})">
+                        <div><span class="reading-card-badge">${_READING_LABELS[r.type] || r.type}</span></div>
+                        <h3 class="text-title">${r.heading}</h3>
+                        <div class="text-meta">${r.source}</div>
+                        <div style="margin-top:0.5rem;">
+                            ${r.hasGreek
+                                ? '<span style="color:var(--greek-primary);font-size:0.8rem;font-family:\'IBM Plex Mono\',monospace;">● Greek available</span>'
+                                : '<span style="opacity:0.4;font-size:0.8rem;font-family:\'IBM Plex Mono\',monospace;">○ English only</span>'}
+                        </div>
+                        <div class="text-desc" style="margin-top:0.5rem;">${r.text.slice(0, 150)}…</div>
+                    </div>
+                `).join('')}`;
+        }
+
+        function openMassReading(idx) {
+            const reading = currentMassReadings[idx];
+            if (!reading) return;
+
+            currentLang = 'greek';
+            document.getElementById('reader-title').textContent =
+                reading.heading + (reading.source ? ' · ' + reading.source : '');
+            document.getElementById('toggle-trans-btn').style.display = 'none';
+
+            const citation = parseMassSource(reading.source);
+            const verses = lookupGreekVerses(citation);
+
+            let leftContent;
+            if (verses && verses.length) {
+                const greekLines = verses.map((v, i) =>
+                    `<p class="verse-para"><span class="verse-inline-num">${citation.v1 + i}</span>${makeWordClickable(v.g, 'greek')}</p>`
+                ).join('');
+                leftContent = `
+                    <h3 class="col-heading" style="color:var(--greek-primary);">Ἑλληνικά</h3>
+                    <div class="greek-text">${greekLines}</div>`;
+            } else {
+                leftContent = `
+                    <h3 class="col-heading" style="color:var(--gold);">${reading.source || 'Source'}</h3>
+                    <p style="opacity:0.5;font-style:italic;font-size:0.95rem;line-height:1.8;">Greek text not available for this passage in the current corpus.</p>`;
+            }
+
+            const englishParas = reading.text.split(/\n+/).filter(l => l.trim())
+                .map(l => `<p style="margin-bottom:1rem;">${l.trim()}</p>`).join('');
+
+            const total = currentMassReadings.length;
+            const navHTML = total > 1 ? `
+                <div class="text-nav-bar">
+                    <button class="chapter-nav-btn" onclick="openMassReading(${idx - 1})" ${idx === 0 ? 'disabled' : ''}>◄ Prev</button>
+                    <span class="text-nav-label">${idx + 1} of ${total}</span>
+                    <button class="chapter-nav-btn" onclick="openMassReading(${idx + 1})" ${idx === total - 1 ? 'disabled' : ''}>Next ►</button>
+                </div>` : '';
+
+            document.getElementById('reader-body').innerHTML = `
+                ${navHTML}
+                <div class="facing-text">
+                    <div class="original-column">${leftContent}</div>
+                    <div class="translation-column">
+                        <h3 class="col-heading" style="color:#666;">English</h3>
+                        <div class="translation-text">${englishParas}</div>
+                    </div>
+                </div>`;
+
+            document.getElementById('reader').classList.add('active');
         }
 
         window.onload = () => { init(); loadMorphData(); };
