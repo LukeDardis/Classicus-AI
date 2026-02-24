@@ -969,7 +969,7 @@ Long ago, Catiline, you ought to have been led to death by the consul's command,
                 },
                 {
                     id: 6,
-                    title: "Vergil's Aeneid - Book I (Opening, Lines 1–80)",
+                    title: "Vergil's Aeneid - Book I (Opening, Lines 1–63)",
                     author: "Publius Vergilius Maro (70-19 BC)",
                     level: "advanced",
                     description: "The opening of Vergil's Aeneid. Dactylic hexameter covering the invocation, Juno's wrath, the Trojans at sea, and the introduction of Aeolus.",
@@ -5516,30 +5516,56 @@ ${text.translation}
 
             const parser = new DOMParser();
             const doc = parser.parseFromString(htmlText, 'text/html');
-            const typeMap = {
-                'first reading': 'Mass_R1',
-                'second reading': 'Mass_R2',
-                'gospel': 'Mass_G'
-            };
+            const typeMap = { 'first reading': 'Mass_R1', 'second reading': 'Mass_R2', 'gospel': 'Mass_G' };
+
+            // Return leaf divs from a td, stripping navigation/audio elements
+            function leafDivs(td) {
+                const cl = td.cloneNode(true);
+                cl.querySelectorAll('table, .audioclip, audio, h4').forEach(e => e.remove());
+                return [...cl.querySelectorAll('div')].filter(d => !d.querySelector('div'));
+            }
+
             const readings = {};
-            for (const td of doc.querySelectorAll('td.parallelR')) {
-                const ths = td.querySelectorAll('th');
+            for (const rightTd of doc.querySelectorAll('td.parallelR')) {
+                const row = rightTd.closest('tr');
+                if (!row) continue;
+                const leftTd = row.querySelector('td.parallelL');
+                if (!leftTd) continue;
+
+                const ths = rightTd.querySelectorAll('th');
                 if (ths.length < 2) continue;
                 const key = typeMap[ths[0].textContent.trim().toLowerCase()];
                 if (!key) continue;
                 const citation = ths[1].textContent.trim();
 
-                // Split innerHTML on versenumber spans to isolate each verse
-                const bodyHTML = td.innerHTML.replace(/<table[\s\S]*?<\/table>/i, '');
-                const parts = bodyHTML.split(/<span[^>]*class="versenumber"[^>]*>(\d+)<\/span>/i);
-                const verses = [];
-                for (let i = 1; i < parts.length - 1; i += 2) {
-                    const tmp = document.createElement('div');
-                    tmp.innerHTML = parts[i + 1];
-                    const t = tmp.textContent.replace(/\s+/g, ' ').trim();
-                    if (t) verses.push({ v: parseInt(parts[i]), t });
+                // Greek: extract verse-numbered lines from parallelR
+                const rDivs = leafDivs(rightTd);
+                const verseNums = [];
+                let curV = null;
+                for (const div of rDivs) {
+                    const vn = div.querySelector('span.versenumber');
+                    if (vn) curV = parseInt(vn.textContent);
+                    verseNums.push(curV);
                 }
-                if (verses.length) readings[key] = { citation, verses };
+                const greek = [];
+                for (let i = 0; i < rDivs.length; i++) {
+                    const cl = rDivs[i].cloneNode(true);
+                    cl.querySelectorAll('span.versenumber').forEach(s => s.remove());
+                    const t = cl.textContent.replace(/\s+/g, ' ').trim();
+                    if (t) greek.push({ v: verseNums[i], t });
+                }
+
+                // English: extract from parallelL, aligning verse numbers positionally
+                const lDivs = leafDivs(leftTd);
+                const english = [];
+                for (let i = 0; i < lDivs.length; i++) {
+                    const t = lDivs[i].textContent.replace(/\s+/g, ' ').trim();
+                    if (!t) continue;
+                    const v = i < verseNums.length ? verseNums[i] : (verseNums[verseNums.length - 1] ?? null);
+                    english.push({ v, t });
+                }
+
+                if (greek.length) readings[key] = { citation, greek, english };
             }
             massGreekCache = { date: dateStr, data: readings };
             return readings;
@@ -5555,7 +5581,6 @@ ${text.translation}
             document.getElementById('toggle-trans-btn').style.display = 'none';
             document.getElementById('reader').classList.add('active');
 
-            const englishParas = formatMassText(reading.rawHTML, reading.type);
             const total = currentMassReadings.length;
             const navHTML = total > 1 ? `
                 <div class="text-nav-bar">
@@ -5564,58 +5589,74 @@ ${text.translation}
                     <button class="chapter-nav-btn" onclick="openMassReading(${idx + 1})" ${idx === total - 1 ? 'disabled' : ''}>Next ►</button>
                 </div>` : '';
 
-            // Show reader immediately with a loading state for the Greek column
+            // Show spinner while fetching
             document.getElementById('reader-body').innerHTML = `
                 ${navHTML}
                 <div class="facing-text">
                     <div class="original-column" id="mass-greek-col">
                         <div class="dict-spinner" style="width:24px;height:24px;border-width:3px;margin:2rem auto;"></div>
                     </div>
-                    <div class="translation-column">
-                        <h3 class="col-heading" style="color:#666;">English</h3>
-                        <div class="translation-text">${englishParas}</div>
+                    <div class="translation-column" id="mass-eng-col">
+                        <div class="dict-spinner" style="width:24px;height:24px;border-width:3px;margin:2rem auto;"></div>
                     </div>
                 </div>`;
 
-            // 1) Try CORS-proxy fetch from Universalis /G/ page (works everywhere)
-            let universalisVerses = null;
+            // Fetch Greek + website English from Universalis /G/ page
+            let readingData = null;
             if (massDate) {
                 try {
-                    const data = await fetchGreekMassJS(massDate);
-                    if (data[reading.type] && data[reading.type].verses.length) {
-                        universalisVerses = data[reading.type].verses;
-                    }
+                    const fetched = await fetchGreekMassJS(massDate);
+                    readingData = fetched[reading.type] || null;
                 } catch (_) {}
             }
 
+            // ── Greek column ──────────────────────────────────────────────────
             let leftContent;
-            if (universalisVerses) {
-                const greekLines = universalisVerses.map(v =>
+            if (readingData && readingData.greek.length) {
+                const lines = readingData.greek.map(v =>
                     `<p class="verse-para"><span class="verse-inline-num">${v.v}</span>${makeWordClickable(v.t, 'greek')}</p>`
                 ).join('');
-                leftContent = `
-                    <h3 class="col-heading" style="color:var(--greek-primary);">Ἑλληνικά</h3>
-                    <div class="greek-text">${greekLines}</div>`;
+                leftContent = `<h3 class="col-heading" style="color:var(--greek-primary);">Ἑλληνικά</h3>
+                    <div class="greek-text">${lines}</div>`;
             } else {
-                // 2) Fall back to embedded BIBLE_TEXTS (Gospels only)
+                // Fall back to embedded BIBLE_TEXTS (Gospels only)
                 const citation = parseMassSource(reading.source);
                 const verses = lookupGreekVerses(citation);
                 if (verses && verses.length) {
-                    const greekLines = verses.map((v, i) =>
+                    const lines = verses.map((v, i) =>
                         `<p class="verse-para"><span class="verse-inline-num">${citation.v1 + i}</span>${makeWordClickable(v.g, 'greek')}</p>`
                     ).join('');
-                    leftContent = `
-                        <h3 class="col-heading" style="color:var(--greek-primary);">Ἑλληνικά</h3>
-                        <div class="greek-text">${greekLines}</div>`;
+                    leftContent = `<h3 class="col-heading" style="color:var(--greek-primary);">Ἑλληνικά</h3>
+                        <div class="greek-text">${lines}</div>`;
                 } else {
-                    leftContent = `
-                        <h3 class="col-heading" style="color:var(--gold);">${reading.source || 'Source'}</h3>
+                    leftContent = `<h3 class="col-heading" style="color:var(--gold);">${reading.source || 'Source'}</h3>
                         <p style="opacity:0.5;font-style:italic;font-size:0.95rem;line-height:1.8;">Greek text not available for this passage.</p>`;
                 }
             }
 
-            const col = document.getElementById('mass-greek-col');
-            if (col) col.innerHTML = leftContent;
+            // ── English column ────────────────────────────────────────────────
+            // Prefer website English (Jerusalem Bible, verse-aligned); fall back to JSONP
+            let rightContent;
+            if (readingData && readingData.english && readingData.english.length) {
+                let lastV = null;
+                const lines = readingData.english.map(item => {
+                    const newV = item.v !== null && item.v !== lastV;
+                    if (newV) lastV = item.v;
+                    const vSpan = newV
+                        ? `<span class="verse-inline-num">${item.v}</span>`
+                        : `<span class="verse-inline-num" style="visibility:hidden;">·</span>`;
+                    return `<p class="verse-para">${vSpan}${item.t}</p>`;
+                }).join('');
+                rightContent = `<h3 class="col-heading" style="color:#666;">English</h3>
+                    <div class="translation-text">${lines}</div>`;
+            } else {
+                const englishParas = formatMassText(reading.rawHTML, reading.type);
+                rightContent = `<h3 class="col-heading" style="color:#666;">English</h3>
+                    <div class="translation-text">${englishParas}</div>`;
+            }
+
+            document.getElementById('mass-greek-col').innerHTML = leftContent;
+            document.getElementById('mass-eng-col').innerHTML = rightContent;
         }
 
         window.onload = () => { init(); loadMorphData(); };
