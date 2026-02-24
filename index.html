@@ -4999,6 +4999,7 @@ Revolving such thoughts in her inflamed heart, the goddess came to Aeolia, the l
         let currentTextId = null;
         let currentTextLang = null;
         let currentMassReadings = [];
+        let massDate = '';
 
         function init() {
             renderLibrary('greek');
@@ -5337,6 +5338,7 @@ ${text.translation}
                 const dateStr = today.getFullYear().toString()
                     + String(today.getMonth() + 1).padStart(2, '0')
                     + String(today.getDate()).padStart(2, '0');
+                massDate = dateStr;
                 const script = document.createElement('script');
                 script.src = 'https://universalis.com/Europe.England/' + dateStr + '/jsonpmass.js?callback=' + cbName;
                 script.onerror = () => {
@@ -5501,7 +5503,7 @@ ${text.translation}
                 .join('');
         }
 
-        function openMassReading(idx) {
+        async function openMassReading(idx) {
             const reading = currentMassReadings[idx];
             if (!reading) return;
 
@@ -5509,26 +5511,9 @@ ${text.translation}
             document.getElementById('reader-title').textContent =
                 reading.heading + (reading.source ? ' · ' + reading.source : '');
             document.getElementById('toggle-trans-btn').style.display = 'none';
-
-            const citation = parseMassSource(reading.source);
-            const verses = lookupGreekVerses(citation);
-
-            let leftContent;
-            if (verses && verses.length) {
-                const greekLines = verses.map((v, i) =>
-                    `<p class="verse-para"><span class="verse-inline-num">${citation.v1 + i}</span>${makeWordClickable(v.g, 'greek')}</p>`
-                ).join('');
-                leftContent = `
-                    <h3 class="col-heading" style="color:var(--greek-primary);">Ἑλληνικά</h3>
-                    <div class="greek-text">${greekLines}</div>`;
-            } else {
-                leftContent = `
-                    <h3 class="col-heading" style="color:var(--gold);">${reading.source || 'Source'}</h3>
-                    <p style="opacity:0.5;font-style:italic;font-size:0.95rem;line-height:1.8;">Greek text not available for this passage in the current corpus.</p>`;
-            }
+            document.getElementById('reader').classList.add('active');
 
             const englishParas = formatMassText(reading.rawHTML, reading.type);
-
             const total = currentMassReadings.length;
             const navHTML = total > 1 ? `
                 <div class="text-nav-bar">
@@ -5537,17 +5522,62 @@ ${text.translation}
                     <button class="chapter-nav-btn" onclick="openMassReading(${idx + 1})" ${idx === total - 1 ? 'disabled' : ''}>Next ►</button>
                 </div>` : '';
 
+            // Show reader immediately with a loading state for the Greek column
             document.getElementById('reader-body').innerHTML = `
                 ${navHTML}
                 <div class="facing-text">
-                    <div class="original-column">${leftContent}</div>
+                    <div class="original-column" id="mass-greek-col">
+                        <div class="dict-spinner" style="width:24px;height:24px;border-width:3px;margin:2rem auto;"></div>
+                    </div>
                     <div class="translation-column">
                         <h3 class="col-heading" style="color:#666;">English</h3>
                         <div class="translation-text">${englishParas}</div>
                     </div>
                 </div>`;
 
-            document.getElementById('reader').classList.add('active');
+            // 1) Try Flask proxy (localhost only — no CORS restriction)
+            let universalisVerses = null;
+            const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+            if (isLocal && massDate) {
+                try {
+                    const resp = await fetch(`/api/greek-mass?date=${massDate}`);
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        if (data[reading.type] && data[reading.type].verses.length) {
+                            universalisVerses = data[reading.type].verses;
+                        }
+                    }
+                } catch (_) {}
+            }
+
+            let leftContent;
+            if (universalisVerses) {
+                const greekLines = universalisVerses.map(v =>
+                    `<p class="verse-para"><span class="verse-inline-num">${v.v}</span>${makeWordClickable(v.t, 'greek')}</p>`
+                ).join('');
+                leftContent = `
+                    <h3 class="col-heading" style="color:var(--greek-primary);">Ἑλληνικά</h3>
+                    <div class="greek-text">${greekLines}</div>`;
+            } else {
+                // 2) Fall back to embedded BIBLE_TEXTS (Gospels only)
+                const citation = parseMassSource(reading.source);
+                const verses = lookupGreekVerses(citation);
+                if (verses && verses.length) {
+                    const greekLines = verses.map((v, i) =>
+                        `<p class="verse-para"><span class="verse-inline-num">${citation.v1 + i}</span>${makeWordClickable(v.g, 'greek')}</p>`
+                    ).join('');
+                    leftContent = `
+                        <h3 class="col-heading" style="color:var(--greek-primary);">Ἑλληνικά</h3>
+                        <div class="greek-text">${greekLines}</div>`;
+                } else {
+                    leftContent = `
+                        <h3 class="col-heading" style="color:var(--gold);">${reading.source || 'Source'}</h3>
+                        <p style="opacity:0.5;font-style:italic;font-size:0.95rem;line-height:1.8;">Greek text not available for this passage.<br><small>Run the local Flask server for full NT Greek coverage.</small></p>`;
+                }
+            }
+
+            const col = document.getElementById('mass-greek-col');
+            if (col) col.innerHTML = leftContent;
         }
 
         window.onload = () => { init(); loadMorphData(); };
