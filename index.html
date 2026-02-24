@@ -5000,6 +5000,7 @@ Revolving such thoughts in her inflamed heart, the goddess came to Aeolia, the l
         let currentTextLang = null;
         let currentMassReadings = [];
         let massDate = '';
+        let massGreekCache = null; // { date, data }
 
         function init() {
             renderLibrary('greek');
@@ -5503,6 +5504,47 @@ ${text.translation}
                 .join('');
         }
 
+        async function fetchGreekMassJS(dateStr) {
+            if (massGreekCache && massGreekCache.date === dateStr) {
+                return massGreekCache.data;
+            }
+            const targetUrl = `https://universalis.com/G/${dateStr}/mass.htm`;
+            const proxyUrl = 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(targetUrl);
+            const resp = await fetch(proxyUrl);
+            if (!resp.ok) throw new Error('proxy ' + resp.status);
+            const htmlText = await resp.text();
+
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlText, 'text/html');
+            const typeMap = {
+                'first reading': 'Mass_R1',
+                'second reading': 'Mass_R2',
+                'gospel': 'Mass_G'
+            };
+            const readings = {};
+            for (const td of doc.querySelectorAll('td.parallelR')) {
+                const ths = td.querySelectorAll('th');
+                if (ths.length < 2) continue;
+                const key = typeMap[ths[0].textContent.trim().toLowerCase()];
+                if (!key) continue;
+                const citation = ths[1].textContent.trim();
+
+                // Split innerHTML on versenumber spans to isolate each verse
+                const bodyHTML = td.innerHTML.replace(/<table[\s\S]*?<\/table>/i, '');
+                const parts = bodyHTML.split(/<span[^>]*class="versenumber"[^>]*>(\d+)<\/span>/i);
+                const verses = [];
+                for (let i = 1; i < parts.length - 1; i += 2) {
+                    const tmp = document.createElement('div');
+                    tmp.innerHTML = parts[i + 1];
+                    const t = tmp.textContent.replace(/\s+/g, ' ').trim();
+                    if (t) verses.push({ v: parseInt(parts[i]), t });
+                }
+                if (verses.length) readings[key] = { citation, verses };
+            }
+            massGreekCache = { date: dateStr, data: readings };
+            return readings;
+        }
+
         async function openMassReading(idx) {
             const reading = currentMassReadings[idx];
             if (!reading) return;
@@ -5535,17 +5577,13 @@ ${text.translation}
                     </div>
                 </div>`;
 
-            // 1) Try Flask proxy (localhost only — no CORS restriction)
+            // 1) Try CORS-proxy fetch from Universalis /G/ page (works everywhere)
             let universalisVerses = null;
-            const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
-            if (isLocal && massDate) {
+            if (massDate) {
                 try {
-                    const resp = await fetch(`/api/greek-mass?date=${massDate}`);
-                    if (resp.ok) {
-                        const data = await resp.json();
-                        if (data[reading.type] && data[reading.type].verses.length) {
-                            universalisVerses = data[reading.type].verses;
-                        }
+                    const data = await fetchGreekMassJS(massDate);
+                    if (data[reading.type] && data[reading.type].verses.length) {
+                        universalisVerses = data[reading.type].verses;
                     }
                 } catch (_) {}
             }
@@ -5572,7 +5610,7 @@ ${text.translation}
                 } else {
                     leftContent = `
                         <h3 class="col-heading" style="color:var(--gold);">${reading.source || 'Source'}</h3>
-                        <p style="opacity:0.5;font-style:italic;font-size:0.95rem;line-height:1.8;">Greek text not available for this passage.<br><small>Run the local Flask server for full NT Greek coverage.</small></p>`;
+                        <p style="opacity:0.5;font-style:italic;font-size:0.95rem;line-height:1.8;">Greek text not available for this passage.</p>`;
                 }
             }
 
