@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Classicus AI - Complete Library with Interactive Dictionary</title>
+    <title>Classicus AI - Classical &amp; Biblical Texts with Interactive Dictionary</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&family=GFS+Didot&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -498,16 +498,17 @@
         /* CHAPTER / TEXT NAVIGATION */
         .chapter-nav-btn {
             padding: 0.4rem 1rem;
-            border: 2px solid #ddd;
+            border: 2px solid var(--gold);
             border-radius: 4px;
-            background: white;
+            background: rgba(201,168,76,0.1);
+            color: #7a5f1a;
             cursor: pointer;
             font-family: 'IBM Plex Mono', monospace;
             font-size: 0.85rem;
             font-weight: 600;
             transition: all 0.2s;
         }
-        .chapter-nav-btn:hover:not(:disabled) { background: var(--ink); color: white; border-color: var(--ink); }
+        .chapter-nav-btn:hover:not(:disabled) { background: var(--gold); color: white; border-color: var(--gold); }
         .chapter-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
         .text-nav-bar {
@@ -612,13 +613,13 @@
     <div class="container">
         <header>
             <h1 class="logo">CLASSICUS AI</h1>
-            <p class="subtitle">Complete Classical & Biblical Library with Interactive Dictionary</p>
+            <p class="subtitle">Classical & Biblical Texts with Interactive Dictionary</p>
         </header>
 
         <div class="lang-switcher">
             <button class="lang-btn active" onclick="switchMode('greek')">ἙΛΛΗΝΙΚΆ · Greek</button>
             <button class="lang-btn" onclick="switchMode('latin')">LATINA · Latin</button>
-            <button class="lang-btn" onclick="switchMode('bible')">📖 Bible (Polyglot)</button>
+            <button class="lang-btn" onclick="switchMode('bible')">📖 Novum Testamentum · The Gospels</button>
             <button class="lang-btn" onclick="switchMode('mass')">📿 Daily Mass</button>
         </div>
 
@@ -5082,17 +5083,7 @@ Revolving such thoughts in her inflamed heart, the goddess came to Aeolia, the l
             const textClass = lang === 'greek' ? 'greek-text' : 'latin-text';
             const clickableOriginal = makeWordClickable(text.content, lang);
 
-            const allTexts = texts[lang];
-            const idx = allTexts.findIndex(t => t.id === id);
-            const hasPrev = idx > 0;
-            const hasNext = idx < allTexts.length - 1;
-
             document.getElementById('reader-body').innerHTML = `
-                <div class="text-nav-bar">
-                    <button class="chapter-nav-btn" onclick="prevText()" ${hasPrev ? '' : 'disabled'}>◄ Prev</button>
-                    <span class="text-nav-label">${idx + 1} of ${allTexts.length}</span>
-                    <button class="chapter-nav-btn" onclick="nextText()" ${hasNext ? '' : 'disabled'}>Next ►</button>
-                </div>
                 <div class="facing-text">
                     <div class="original-column">
                         <h3 style="font-family: 'IBM Plex Mono', monospace; font-size: 0.9rem; text-transform: uppercase; color: var(--gold); margin-bottom: 1.5rem;">
