@@ -871,7 +871,7 @@
 
         .streak-badge:hover { border-color: var(--gold); }
 
-        .streak-flame { font-size: 0.95rem; line-height: 1; }
+        .streak-flame { display: inline-flex; align-items: center; vertical-align: middle; margin-right: 1px; }
 
         .streak-count {
             font-family: var(--font-ui);
@@ -1206,7 +1206,7 @@
             <button class="lang-btn" onclick="switchMode('latin')">LATINA · Latin</button>
             <button class="lang-btn" onclick="switchMode('bible')">Novum Testamentum · The Gospels</button>
             <button class="lang-btn" onclick="switchMode('mass')">Daily Mass</button>
-            <button class="lang-btn" onclick="switchMode('vocab')">◆ Vocabulary</button>
+            <button class="lang-btn" onclick="switchMode('vocab')">Vocabulary</button>
         </div>
 
         <!-- Greek Library -->
@@ -5646,7 +5646,22 @@ Revolving such thoughts in her inflamed heart, the goddess came to Aeolia, the l
             const count = loadStreak();
             const el = document.getElementById('streak-badge');
             if (!el) return;
-            el.innerHTML = `<span class="streak-flame">🔥</span><span class="streak-count">${count}</span><span class="streak-label">&nbsp;Day Streak</span>`;
+            el.innerHTML = `<span class="streak-flame"><svg width="12" height="22" viewBox="0 0 12 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- handle -->
+  <rect x="4.5" y="13" width="3" height="7" rx="0.5" fill="#7a5c28"/>
+  <!-- grip wrapping lines -->
+  <line x1="4.5" y1="15" x2="7.5" y2="15" stroke="#5a3e18" stroke-width="0.6"/>
+  <line x1="4.5" y1="17" x2="7.5" y2="17" stroke="#5a3e18" stroke-width="0.6"/>
+  <line x1="4.5" y1="19" x2="7.5" y2="19" stroke="#5a3e18" stroke-width="0.6"/>
+  <!-- cup / tray -->
+  <path d="M3 13 Q3 11.5 6 11.5 Q9 11.5 9 13 Z" fill="#9a7a32"/>
+  <!-- outer flame -->
+  <path d="M6 1 C6 1 9.5 4.5 9.5 8 C9.5 10.5 8.5 12 6 12 C3.5 12 2.5 10.5 2.5 8 C2.5 4.5 6 1 6 1Z" fill="#c9a84c" opacity="0.9"/>
+  <!-- mid flame -->
+  <path d="M6 3.5 C6 3.5 8 6 8 8.5 C8 10 7.2 11 6 11 C4.8 11 4 10 4 8.5 C4 6 6 3.5 6 3.5Z" fill="#e8d5a3" opacity="0.75"/>
+  <!-- inner core -->
+  <path d="M6 6 C6 6 7 7.5 7 8.8 C7 9.6 6.6 10.2 6 10.2 C5.4 10.2 5 9.6 5 8.8 C5 7.5 6 6 6 6Z" fill="#fff8e8" opacity="0.5"/>
+</svg></span><span class="streak-count">${count}</span><span class="streak-label">&nbsp;Day Streak</span>`;
         }
 
         // ── Vocabulary ───────────────────────────────────────────────────────
