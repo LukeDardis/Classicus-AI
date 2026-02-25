@@ -1195,44 +1195,42 @@
            Pure visual enhancement — no layout or content changes.
            ══════════════════════════════════════════════════════════ */
 
-        /* 1 ── Deep base + warm top glow ─────────────────────────── */
-        :root { --bg-primary: #09080a; }
+        /* 1 ── Base + warm top glow ──────────────────────────────── */
+        :root { --bg-primary: #181614; }
 
         body {
             background:
                 radial-gradient(ellipse 160% 40% at 50% 0%,
-                    rgba(201,168,76,0.055) 0%, transparent 100%),
-                #09080a;
+                    rgba(201,168,76,0.07) 0%, transparent 100%),
+                #181614;
         }
 
-        /* Update grain: 5.5% opacity, 180px tile */
+        /* Grain: 3.5% opacity, 180px tile */
         body::before {
-            opacity: 0.055;
+            opacity: 0.035;
             background-size: 180px 180px;
         }
 
-        /* Vignette layer */
+        /* Subtle vignette */
         body::after {
             content: '';
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(ellipse 85% 85% at 50% 42%,
-                transparent 28%, rgba(0,0,0,0.65) 100%);
+            background: radial-gradient(ellipse 90% 90% at 50% 42%,
+                transparent 40%, rgba(0,0,0,0.28) 100%);
             pointer-events: none;
             z-index: 9998;
         }
 
-        /* 2 ── Panel depth + warm-light top glow ─────────────────── */
+        /* 2 ── Panel depth ────────────────────────────────────────── */
         .text-card {
             background:
                 linear-gradient(to bottom, rgba(201,168,76,0.04) 0px, transparent 80px),
                 var(--bg-secondary);
             box-shadow:
-                0 12px 60px rgba(0,0,0,0.6),
-                0 4px 20px rgba(0,0,0,0.4),
-                0 0 80px rgba(201,168,76,0.04),
-                inset 0 1px 0 rgba(255,255,255,0.03),
-                inset 0 -2px 0 rgba(0,0,0,0.3);
+                0 6px 30px rgba(0,0,0,0.3),
+                0 2px 8px rgba(0,0,0,0.18),
+                inset 0 1px 0 rgba(255,255,255,0.03);
         }
 
         .text-card:hover {
@@ -1240,15 +1238,14 @@
                 linear-gradient(to bottom, rgba(201,168,76,0.06) 0px, transparent 80px),
                 var(--bg-tertiary);
             box-shadow:
-                0 12px 60px rgba(0,0,0,0.65),
-                0 4px 20px rgba(0,0,0,0.45),
-                0 0 40px rgba(201,168,76,0.07),
-                inset 0 1px 0 rgba(255,255,255,0.03),
-                inset 0 -2px 0 rgba(0,0,0,0.3);
+                0 8px 36px rgba(0,0,0,0.35),
+                0 2px 10px rgba(0,0,0,0.22),
+                0 0 30px rgba(201,168,76,0.06),
+                inset 0 1px 0 rgba(255,255,255,0.03);
         }
 
         .text-card:hover::before {
-            box-shadow: 0 0 10px rgba(201,168,76,0.3);
+            box-shadow: 0 0 8px rgba(201,168,76,0.25);
         }
 
         .reader-content {
@@ -1256,11 +1253,9 @@
                 linear-gradient(to bottom, rgba(201,168,76,0.04) 0px, transparent 80px),
                 var(--bg-secondary);
             box-shadow:
-                0 12px 60px rgba(0,0,0,0.6),
-                0 4px 20px rgba(0,0,0,0.4),
-                0 0 80px rgba(201,168,76,0.04),
-                inset 0 1px 0 rgba(255,255,255,0.03),
-                inset 0 -2px 0 rgba(0,0,0,0.3);
+                0 6px 30px rgba(0,0,0,0.28),
+                0 2px 8px rgba(0,0,0,0.18),
+                inset 0 1px 0 rgba(255,255,255,0.03);
         }
 
         .bible-nav {
@@ -1268,22 +1263,19 @@
                 linear-gradient(to bottom, rgba(201,168,76,0.04) 0px, transparent 80px),
                 var(--bg-secondary);
             box-shadow:
-                0 8px 40px rgba(0,0,0,0.55),
-                0 2px 12px rgba(0,0,0,0.35),
-                0 0 60px rgba(201,168,76,0.03),
-                inset 0 1px 0 rgba(255,255,255,0.03),
-                inset 0 -2px 0 rgba(0,0,0,0.25);
+                0 4px 20px rgba(0,0,0,0.25),
+                0 1px 6px rgba(0,0,0,0.15),
+                inset 0 1px 0 rgba(255,255,255,0.03);
         }
 
         .dictionary-popup {
             background: #252018;
             border-color: rgba(201,168,76,0.3);
             box-shadow:
-                0 12px 60px rgba(0,0,0,0.75),
-                0 4px 20px rgba(0,0,0,0.55),
-                0 0 40px rgba(201,168,76,0.06),
-                inset 0 1px 0 rgba(255,255,255,0.03),
-                inset 0 -2px 0 rgba(0,0,0,0.3);
+                0 8px 36px rgba(0,0,0,0.45),
+                0 2px 10px rgba(0,0,0,0.28),
+                0 0 30px rgba(201,168,76,0.05),
+                inset 0 1px 0 rgba(255,255,255,0.03);
         }
 
         .vocab-stats {
@@ -1291,19 +1283,15 @@
                 linear-gradient(to bottom, rgba(201,168,76,0.04) 0px, transparent 80px),
                 var(--bg-secondary);
             box-shadow:
-                0 12px 60px rgba(0,0,0,0.6),
-                0 4px 20px rgba(0,0,0,0.4),
-                0 0 80px rgba(201,168,76,0.04),
-                inset 0 1px 0 rgba(255,255,255,0.03),
-                inset 0 -2px 0 rgba(0,0,0,0.3);
+                0 6px 30px rgba(0,0,0,0.28),
+                0 2px 8px rgba(0,0,0,0.18),
+                inset 0 1px 0 rgba(255,255,255,0.03);
         }
 
         .vocab-word-card {
             box-shadow:
-                0 4px 24px rgba(0,0,0,0.45),
-                0 0 40px rgba(201,168,76,0.03),
-                inset 0 1px 0 rgba(255,255,255,0.025),
-                inset 0 -1px 0 rgba(0,0,0,0.25);
+                0 2px 12px rgba(0,0,0,0.22),
+                inset 0 1px 0 rgba(255,255,255,0.02);
         }
 
         .session-card {
@@ -1311,11 +1299,10 @@
                 linear-gradient(to bottom, rgba(201,168,76,0.05) 0px, transparent 80px),
                 var(--bg-secondary);
             box-shadow:
-                0 12px 60px rgba(0,0,0,0.85),
-                0 4px 20px rgba(0,0,0,0.55),
-                0 0 80px rgba(201,168,76,0.07),
-                inset 0 1px 0 rgba(255,255,255,0.03),
-                inset 0 -2px 0 rgba(0,0,0,0.35);
+                0 8px 40px rgba(0,0,0,0.45),
+                0 2px 12px rgba(0,0,0,0.28),
+                0 0 50px rgba(201,168,76,0.06),
+                inset 0 1px 0 rgba(255,255,255,0.03);
         }
 
         /* 3 ── Gold glow on text ──────────────────────────────────── */
