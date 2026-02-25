@@ -3,141 +3,209 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Classicus AI - Classical &amp; Biblical Texts with Interactive Dictionary</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&family=GFS+Didot&display=swap" rel="stylesheet">
+    <title>Academia Classica · Classical &amp; Biblical Texts</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --latin-primary: #8b2635;
-            --greek-primary: #1a4d7a;
-            --bible-primary: #3a6b3a;
-            --ink: #1a1410;
+            --bg-primary: #0f0e0c;
+            --bg-secondary: #161410;
+            --bg-tertiary: #1e1b16;
+            --text-primary: #f5f0e8;
+            --text-secondary: #c8bfb0;
             --gold: #c9a84c;
+            --gold-muted: #9a7a32;
+            --gold-pale: #e8d5a3;
+            --border: rgba(201,168,76,0.25);
+            --font-body: 'Cormorant Garamond', Georgia, serif;
+            --font-ui: 'Cinzel', Georgia, serif;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Playfair Display', serif;
-            background: linear-gradient(135deg, #e8f1f8 0%, #f4ede1 100%);
-            color: var(--ink);
+            font-family: var(--font-body);
+            background: var(--bg-primary);
+            color: var(--text-primary);
             line-height: 1.6;
+            min-height: 100vh;
         }
 
-        body.greek-mode { background: linear-gradient(135deg, #e8f1f8, #d4e8f7); }
-        body.latin-mode { background: linear-gradient(135deg, #f4ede1, #e8ddc8); }
-        body.bible-mode { background: linear-gradient(135deg, #e8f4e8, #d8e8d8); }
+        /* Grain texture overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            background-repeat: repeat;
+            background-size: 200px 200px;
+        }
+
+        /* Mode classes — kept for JS compatibility */
+        body.greek-mode, body.latin-mode, body.bible-mode, body.mass-mode {}
 
         .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
 
         header {
             text-align: center;
-            padding: 2rem 0;
-            border-bottom: 3px double var(--ink);
+            padding: 3rem 0 2rem;
             margin-bottom: 3rem;
+            position: relative;
+        }
+
+        header::after {
+            content: '';
+            display: block;
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--gold-muted), transparent);
         }
 
         .logo {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 2.5rem;
+            font-family: var(--font-ui);
+            font-size: 2.4rem;
             font-weight: 600;
-            background: linear-gradient(135deg, var(--latin-primary), var(--greek-primary), var(--bible-primary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 0.5rem;
+            color: var(--gold-pale);
+            letter-spacing: 0.2em;
+            margin-bottom: 0.75rem;
         }
 
         .subtitle {
-            font-size: 1.1rem;
-            opacity: 0.7;
+            font-family: var(--font-body);
+            font-size: 1.05rem;
             font-style: italic;
+            color: var(--text-secondary);
+            font-weight: 300;
+            letter-spacing: 0.05em;
         }
 
         .lang-switcher {
-            margin: 2rem 0;
+            margin: 2.5rem 0 2rem;
             display: flex;
             justify-content: center;
-            gap: 1rem;
+            gap: 0.75rem;
             flex-wrap: wrap;
         }
 
         .lang-btn {
-            padding: 0.75rem 2rem;
-            border: 2px solid var(--ink);
-            background: white;
+            padding: 0.55rem 1.4rem;
+            border: 1px solid var(--border);
+            background: transparent;
             cursor: pointer;
-            font-family: 'IBM Plex Mono', monospace;
-            font-weight: 600;
+            font-family: var(--font-ui);
+            font-weight: 400;
+            font-size: 11px;
+            letter-spacing: 0.2em;
+            color: var(--text-secondary);
             transition: all 0.3s;
-            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .lang-btn:hover {
+            border-color: var(--gold);
+            color: var(--gold-pale);
+            background: rgba(201,168,76,0.05);
         }
 
         .lang-btn.active {
-            background: var(--ink);
-            color: white;
+            border-color: var(--gold);
+            background: rgba(201,168,76,0.1);
+            color: var(--gold-pale);
         }
 
-        .library {
-            display: grid;
-            gap: 2rem;
-        }
+        .library { display: grid; gap: 1.5rem; }
 
         .text-card {
-            background: white;
+            background: var(--bg-secondary);
             padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            border-left: 5px solid var(--greek-primary);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--gold-muted);
             cursor: pointer;
             transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
         }
 
-        body.latin-mode .text-card { border-left-color: var(--latin-primary); }
-        body.bible-mode .text-card { border-left-color: var(--bible-primary); }
-        .text-card:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(0,0,0,0.15); }
+        .text-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--gold-muted), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .text-card:hover {
+            border-left-color: var(--gold);
+            background: var(--bg-tertiary);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+
+        .text-card:hover::before { opacity: 1; }
+
+        body.latin-mode .text-card,
+        body.bible-mode .text-card,
+        body.mass-mode .text-card { border-left-color: var(--gold-muted); }
 
         .text-title {
-            font-size: 1.6rem;
-            font-weight: 700;
-            color: var(--greek-primary);
+            font-family: var(--font-ui);
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--gold-pale);
             margin-bottom: 0.5rem;
+            letter-spacing: 0.03em;
         }
 
-        body.latin-mode .text-title { color: var(--latin-primary); }
-        body.bible-mode .text-title { color: var(--bible-primary); }
+        body.latin-mode .text-title,
+        body.bible-mode .text-title,
+        body.mass-mode .text-title { color: var(--gold-pale); }
 
         .text-meta {
-            font-size: 0.95rem;
-            opacity: 0.7;
-            margin-bottom: 0.5rem;
+            font-family: var(--font-ui);
+            font-size: 0.7rem;
+            letter-spacing: 0.12em;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            opacity: 0.8;
         }
 
         .text-level {
             display: inline-block;
-            padding: 0.25rem 0.75rem;
-            background: var(--greek-primary);
-            color: white;
-            font-size: 0.75rem;
-            border-radius: 12px;
-            font-family: 'IBM Plex Mono', monospace;
+            padding: 0.15rem 0.55rem;
+            background: rgba(201,168,76,0.1);
+            color: var(--gold);
+            font-size: 0.65rem;
+            border: 1px solid var(--border);
+            font-family: var(--font-ui);
+            font-weight: 400;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
             margin-right: 0.5rem;
         }
 
-        body.latin-mode .text-level { background: var(--latin-primary); }
-        body.bible-mode .text-level { background: var(--bible-primary); }
+        body.latin-mode .text-level,
+        body.bible-mode .text-level,
+        body.mass-mode .text-level { background: rgba(201,168,76,0.1); }
 
         .text-desc {
             margin-top: 1rem;
             line-height: 1.7;
+            font-size: 1rem;
+            color: var(--text-secondary);
+            font-weight: 300;
         }
 
-        /* READER - ENHANCED WITH FACING TEXT */
+        /* ── READER ─────────────────────────────────────────────────────── */
         .reader {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.95);
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: var(--bg-primary);
             z-index: 1000;
             overflow-y: auto;
             display: none;
@@ -148,9 +216,19 @@
         .reader-content {
             max-width: 1600px;
             margin: 2rem auto;
-            background: white;
+            background: var(--bg-secondary);
             padding: 3rem;
-            border-radius: 8px;
+            border: 1px solid var(--border);
+            position: relative;
+        }
+
+        /* Gold gradient rule at top of each text panel */
+        .reader-content::before {
+            content: '';
+            display: block;
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--gold-muted), transparent);
+            margin-bottom: 3rem;
         }
 
         .reader-header {
@@ -158,13 +236,16 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid #ddd;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
         }
 
         .reader-title {
-            font-size: 2rem;
-            font-weight: 700;
+            font-family: var(--font-ui);
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--gold-pale);
+            letter-spacing: 0.05em;
         }
 
         .reader-controls {
@@ -174,36 +255,48 @@
         }
 
         .toggle-translation-btn {
-            background: var(--greek-primary);
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
+            background: transparent;
+            color: var(--gold);
+            border: 1px solid var(--border);
+            padding: 0.55rem 1.2rem;
             cursor: pointer;
-            font-family: 'IBM Plex Mono', monospace;
-            font-weight: 600;
-            border-radius: 4px;
+            font-family: var(--font-ui);
+            font-weight: 400;
+            font-size: 11px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
             transition: all 0.3s;
         }
 
-        body.latin-mode .toggle-translation-btn { background: var(--latin-primary); }
-        body.bible-mode .toggle-translation-btn { background: var(--bible-primary); }
-
         .toggle-translation-btn:hover {
-            opacity: 0.8;
+            border-color: var(--gold);
+            background: rgba(201,168,76,0.1);
+            color: var(--gold-pale);
         }
+
+        body.latin-mode .toggle-translation-btn,
+        body.bible-mode .toggle-translation-btn { color: var(--gold); }
 
         .close-btn {
-            background: var(--ink);
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+            padding: 0.55rem 1.2rem;
             cursor: pointer;
-            font-family: 'IBM Plex Mono', monospace;
-            font-weight: 600;
-            border-radius: 4px;
+            font-family: var(--font-ui);
+            font-weight: 400;
+            font-size: 11px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            transition: all 0.3s;
         }
 
-        /* FACING TEXT LAYOUT */
+        .close-btn:hover {
+            border-color: var(--gold);
+            color: var(--gold-pale);
+        }
+
+        /* ── FACING TEXT LAYOUT ──────────────────────────────────────── */
         .facing-text {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -214,7 +307,7 @@
 
         .original-column {
             padding-right: 2rem;
-            border-right: 2px solid #e0e0e0;
+            border-right: 1px solid var(--border);
         }
 
         .translation-column {
@@ -228,15 +321,17 @@
         }
 
         .greek-text {
-            font-family: 'GFS Didot', serif;
-            font-size: 1.3rem;
-            line-height: 2;
+            font-family: var(--font-body);
+            font-size: 17px;
+            line-height: 1.9;
+            color: var(--gold-pale);
         }
 
         .latin-text {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.2rem;
-            line-height: 2;
+            font-family: var(--font-body);
+            font-size: 17px;
+            line-height: 1.9;
+            color: var(--gold-pale);
         }
 
         .poetry-line {
@@ -248,153 +343,203 @@
         .line-num {
             position: absolute;
             left: -2.5rem;
-            color: var(--gold);
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 0.75rem;
-            font-weight: 600;
+            color: var(--gold-muted);
+            font-family: var(--font-ui);
+            font-size: 0.65rem;
+            font-weight: 400;
             min-width: 2rem;
             text-align: right;
+            opacity: 0.7;
         }
 
         .translation-text {
+            font-family: var(--font-body);
             font-size: 1.1rem;
             line-height: 1.9;
-            opacity: 0.9;
+            color: var(--text-secondary);
+            font-weight: 300;
         }
 
-        /* CLICKABLE WORDS */
+        /* ── CLICKABLE WORDS ────────────────────────────────────────── */
         .word {
             cursor: pointer;
-            padding: 2px 4px;
-            border-radius: 3px;
-            transition: background 0.2s;
+            padding: 2px 3px;
+            transition: background 0.2s, color 0.2s;
             display: inline-block;
         }
 
         .word:hover {
-            background: rgba(201, 168, 76, 0.2);
+            background: rgba(201,168,76,0.15);
+            color: var(--gold-pale);
         }
 
         .word.selected {
-            background: rgba(201, 168, 76, 0.4);
+            background: rgba(201,168,76,0.25);
+            color: var(--gold-pale);
         }
 
-        /* DICTIONARY POPUP */
+        /* ── DICTIONARY POPUP ───────────────────────────────────────── */
         .dictionary-popup {
             position: fixed;
             bottom: 1.5rem;
             right: 1.5rem;
             width: 340px;
             max-height: 55vh;
-            background: white;
-            border: 2px solid var(--gold);
-            border-radius: 8px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            background: var(--bg-tertiary);
+            border: 1px solid var(--gold);
+            box-shadow: 0 8px 40px rgba(0,0,0,0.7), inset 0 1px 0 rgba(201,168,76,0.1);
             overflow-y: auto;
             padding: 1.25rem 1.5rem 1.5rem;
             display: none;
             z-index: 2000;
         }
 
-        .dictionary-popup.active {
+        .dictionary-popup.active { display: block; }
+
+        /* Gold gradient rule at top of popup */
+        .dictionary-popup::before {
+            content: '';
             display: block;
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--gold-muted), transparent);
+            margin-bottom: 1rem;
         }
 
         .dict-close {
             position: sticky;
             top: 0;
             float: right;
-            background: #eee;
-            border: none;
-            padding: 0.25rem 0.6rem;
+            background: rgba(201,168,76,0.1);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 0.2rem 0.5rem;
             cursor: pointer;
-            border-radius: 4px;
-            font-weight: 600;
+            font-family: var(--font-ui);
+            font-size: 11px;
+            font-weight: 400;
+            letter-spacing: 0.05em;
+            transition: all 0.2s;
+        }
+
+        .dict-close:hover {
+            background: rgba(201,168,76,0.2);
+            color: var(--gold-pale);
+            border-color: var(--gold);
         }
 
         .dict-word {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--greek-primary);
+            font-family: var(--font-body);
+            font-size: 1.8rem;
+            font-weight: 400;
+            font-style: italic;
+            color: var(--gold-pale);
             margin-bottom: 0.5rem;
+            clear: both;
         }
 
-        body.latin-mode .dict-word { color: var(--latin-primary); }
+        body.latin-mode .dict-word { color: var(--gold-pale); }
 
-        .dict-section {
-            margin: 1.5rem 0;
-        }
+        .dict-section { margin: 1.25rem 0; }
 
         .dict-label {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 0.85rem;
+            font-family: var(--font-ui);
+            font-size: 0.62rem;
             font-weight: 600;
             text-transform: uppercase;
-            color: var(--gold);
+            letter-spacing: 0.2em;
+            color: var(--gold-muted);
             margin-bottom: 0.5rem;
         }
 
         .dict-content {
-            font-size: 1.1rem;
+            font-family: var(--font-body);
+            font-size: 1.05rem;
             line-height: 1.7;
+            color: var(--text-primary);
         }
 
         .dict-parse {
-            background: #f5f5f5;
-            padding: 1rem;
-            border-radius: 4px;
-            border-left: 4px solid var(--gold);
+            background: rgba(201,168,76,0.05);
+            padding: 0.75rem 1rem;
+            border-left: 2px solid var(--gold-muted);
         }
 
         .dict-parse-item {
             display: inline-block;
             margin-right: 1.5rem;
             margin-bottom: 0.5rem;
+            font-family: var(--font-body);
         }
 
         .dict-parse-label {
+            font-family: var(--font-ui);
+            font-size: 0.62rem;
             font-weight: 600;
-            color: var(--gold);
+            letter-spacing: 0.1em;
+            color: var(--gold-muted);
+            text-transform: uppercase;
         }
 
         .dict-loading {
             display: flex; align-items: center; gap: 0.75rem;
-            padding: 1.5rem 0; color: #999;
-            font-family: 'IBM Plex Mono', monospace; font-size: 0.9rem;
-        }
-        .dict-spinner {
-            width: 18px; height: 18px; border-radius: 50%;
-            border: 3px solid #e0e0e0; border-top-color: var(--gold);
-            animation: spin 0.8s linear infinite; flex-shrink: 0;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .dict-not-found { padding: 1.5rem 0; color: #999; font-style: italic; }
-        .dict-analysis-block {
-            border-left: 4px solid var(--gold); background: #f9f9f9;
-            padding: 0.75rem 1rem; margin-bottom: 0.75rem;
-            border-radius: 0 4px 4px 0;
-        }
-        .dict-analysis-num {
-            font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem;
-            font-weight: 600; color: #aaa; text-transform: uppercase; margin-bottom: 0.4rem;
+            padding: 1.5rem 0; color: var(--text-secondary);
+            font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.15em;
+            text-transform: uppercase;
         }
 
-        /* BIBLE SPECIFIC */
+        .dict-spinner {
+            width: 16px; height: 16px; border-radius: 50%;
+            border: 2px solid rgba(201,168,76,0.2); border-top-color: var(--gold);
+            animation: spin 0.8s linear infinite; flex-shrink: 0;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .dict-not-found {
+            padding: 1.5rem 0; color: var(--text-secondary);
+            font-style: italic; font-size: 1rem;
+        }
+
+        .dict-analysis-block {
+            border-left: 2px solid var(--gold-muted);
+            background: rgba(201,168,76,0.04);
+            padding: 0.75rem 1rem; margin-bottom: 0.75rem;
+        }
+
+        .dict-analysis-num {
+            font-family: var(--font-ui); font-size: 0.62rem;
+            font-weight: 600; color: var(--gold-muted);
+            text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 0.4rem;
+        }
+
+        /* ── BIBLE ──────────────────────────────────────────────────── */
         .bible-nav {
-            background: white;
+            background: var(--bg-secondary);
             padding: 1.5rem;
             margin-bottom: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid var(--border);
+            position: relative;
+        }
+
+        .bible-nav::before {
+            content: '';
+            display: block;
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--gold-muted), transparent);
+            margin-bottom: 1.25rem;
         }
 
         .bible-nav select {
-            padding: 0.5rem 1rem;
-            border: 2px solid #ddd;
-            border-radius: 4px;
-            font-family: 'Playfair Display', serif;
+            padding: 0.45rem 1rem;
+            border: 1px solid var(--border);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-family: var(--font-ui);
+            font-size: 11px;
+            letter-spacing: 0.1em;
             margin-right: 1rem;
             margin-bottom: 0.5rem;
+            cursor: pointer;
         }
 
         .col-toggles {
@@ -404,74 +549,81 @@
         }
 
         .col-toggle {
-            padding: 0.4rem 0.9rem;
-            border: 2px solid #ddd;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-family: 'IBM Plex Mono', monospace;
-            font-weight: 600;
+            padding: 0.3rem 0.8rem;
+            border: 1px solid var(--border);
+            font-size: 11px;
+            font-family: var(--font-ui);
+            font-weight: 400;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
             cursor: pointer;
-            background: white;
+            background: transparent;
+            color: var(--text-secondary);
             transition: all 0.2s;
         }
 
-        .col-toggle.active.greek-col { background: var(--greek-primary); color: white; border-color: var(--greek-primary); }
-        .col-toggle.active.latin-col { background: var(--latin-primary); color: white; border-color: var(--latin-primary); }
-        .col-toggle.active.english-col { background: var(--bible-primary); color: white; border-color: var(--bible-primary); }
+        .col-toggle:hover { border-color: var(--gold); color: var(--gold-pale); }
 
-        .verse-table {
-            width: 100%;
-            border-collapse: collapse;
+        .col-toggle.active.greek-col,
+        .col-toggle.active.latin-col,
+        .col-toggle.active.english-col {
+            background: rgba(201,168,76,0.12);
+            color: var(--gold-pale);
+            border-color: var(--gold-muted);
         }
 
-        .verse-row:hover > td {
-            background: rgba(201,168,76,0.04);
-        }
+        .verse-table { width: 100%; border-collapse: collapse; }
+
+        .verse-row:hover > td { background: rgba(201,168,76,0.04); }
 
         .verse-row td {
             padding: 0.9rem 1rem;
             vertical-align: top;
-            border-bottom: 1px solid #ece5d8;
+            border-bottom: 1px solid rgba(201,168,76,0.1);
         }
 
         .verse-num-cell {
             width: 3rem;
             text-align: center;
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--gold);
+            font-family: var(--font-ui);
+            font-size: 0.62rem;
+            font-weight: 400;
+            letter-spacing: 0.1em;
+            color: var(--gold-muted);
         }
 
         .greek-cell {
-            font-family: 'GFS Didot', serif;
-            font-size: 1.15rem;
-            line-height: 1.8;
-            color: #12305a;
+            font-family: var(--font-body);
+            font-size: 17px;
+            line-height: 1.9;
+            color: var(--gold-pale);
         }
 
         .latin-cell {
-            font-size: 1.05rem;
-            line-height: 1.8;
-            color: #4a1020;
+            font-family: var(--font-body);
+            font-size: 17px;
+            line-height: 1.9;
+            color: var(--text-primary);
             font-style: italic;
         }
 
         .english-cell {
+            font-family: var(--font-body);
             font-size: 1.05rem;
-            line-height: 1.8;
-            color: #1a3a1a;
+            line-height: 1.9;
+            color: var(--text-secondary);
         }
 
         .col-header-row td {
             padding: 0.5rem 1rem;
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 0.75rem;
+            font-family: var(--font-ui);
+            font-size: 0.62rem;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            border-bottom: 3px solid #ddd;
-            background: #faf6f0;
+            letter-spacing: 0.15em;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-tertiary);
+            color: var(--gold-muted);
         }
 
         .hidden-col { display: none; }
@@ -479,36 +631,48 @@
         .back-btn {
             display: inline-block;
             margin-top: 2rem;
-            padding: 0.75rem 2rem;
-            background: var(--ink);
-            color: white;
+            padding: 0.55rem 1.4rem;
+            background: transparent;
+            color: var(--text-secondary);
             text-decoration: none;
-            border-radius: 4px;
-            font-family: 'IBM Plex Mono', monospace;
-            font-weight: 600;
+            border: 1px solid var(--border);
+            font-family: var(--font-ui);
+            font-size: 11px;
+            font-weight: 400;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
             cursor: pointer;
+            transition: all 0.3s;
         }
 
-        /* MASS MODE */
-        body.mass-mode { background: linear-gradient(135deg, #f4ede1, #ede0c8); }
-        body.mass-mode .text-card { border-left-color: var(--gold); }
-        body.mass-mode .text-title { color: var(--gold); }
-        body.mass-mode .text-level { background: var(--gold); }
+        .back-btn:hover { border-color: var(--gold); color: var(--gold-pale); }
 
-        /* CHAPTER / TEXT NAVIGATION */
+        /* ── MASS MODE ──────────────────────────────────────────────── */
+        body.mass-mode .text-card { border-left-color: var(--gold-muted); }
+        body.mass-mode .text-title { color: var(--gold-pale); }
+        body.mass-mode .text-level { background: rgba(201,168,76,0.1); }
+
+        /* ── CHAPTER / TEXT NAV ─────────────────────────────────────── */
         .chapter-nav-btn {
             padding: 0.4rem 1rem;
-            border: 2px solid var(--gold);
-            border-radius: 4px;
-            background: rgba(201,168,76,0.1);
-            color: #7a5f1a;
+            border: 1px solid var(--gold-muted);
+            background: rgba(201,168,76,0.05);
+            color: var(--gold-muted);
             cursor: pointer;
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 0.85rem;
-            font-weight: 600;
+            font-family: var(--font-ui);
+            font-size: 11px;
+            font-weight: 400;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
             transition: all 0.2s;
         }
-        .chapter-nav-btn:hover:not(:disabled) { background: var(--gold); color: white; border-color: var(--gold); }
+
+        .chapter-nav-btn:hover:not(:disabled) {
+            background: rgba(201,168,76,0.15);
+            color: var(--gold-pale);
+            border-color: var(--gold);
+        }
+
         .chapter-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
         .text-nav-bar {
@@ -517,110 +681,532 @@
             gap: 0.75rem;
             margin-bottom: 1.5rem;
             padding-bottom: 0.75rem;
-            border-bottom: 1px solid #eee;
-        }
-        .text-nav-label {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 0.75rem;
-            opacity: 0.5;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            border-bottom: 1px solid var(--border);
         }
 
-        /* MASS READING DISPLAY */
-        .col-heading {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 0.9rem;
+        .text-nav-label {
+            font-family: var(--font-ui);
+            font-size: 0.62rem;
+            letter-spacing: 0.15em;
+            color: var(--text-secondary);
             text-transform: uppercase;
-            letter-spacing: 1px;
+            opacity: 0.7;
+        }
+
+        /* ── MASS READING DISPLAY ───────────────────────────────────── */
+        .col-heading {
+            font-family: var(--font-ui);
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: var(--gold-muted);
             margin-bottom: 1.5rem;
         }
-        .verse-para { margin-bottom: 0.75rem; line-height: 2; }
+
+        .verse-para {
+            margin-bottom: 0.75rem;
+            line-height: 2;
+            font-family: var(--font-body);
+            font-size: 17px;
+            color: var(--gold-pale);
+        }
+
         .verse-inline-num {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 0.7rem;
-            font-weight: 600;
-            color: var(--gold);
+            font-family: var(--font-ui);
+            font-size: 0.58rem;
+            font-weight: 400;
+            letter-spacing: 0.05em;
+            color: var(--gold-muted);
             vertical-align: super;
             margin-right: 0.3rem;
         }
+
         .reading-card-badge {
             display: inline-block;
-            padding: 0.2rem 0.6rem;
-            background: var(--gold);
-            color: white;
-            font-size: 0.7rem;
-            border-radius: 10px;
-            font-family: 'IBM Plex Mono', monospace;
-            font-weight: 600;
+            padding: 0.15rem 0.5rem;
+            background: rgba(201,168,76,0.1);
+            color: var(--gold);
+            font-size: 0.62rem;
+            border: 1px solid var(--border);
+            font-family: var(--font-ui);
+            font-weight: 400;
+            letter-spacing: 0.12em;
             text-transform: uppercase;
             margin-bottom: 0.5rem;
         }
+
         .mass-loading {
             grid-column: 1 / -1;
             text-align: center;
             padding: 3rem;
-            opacity: 0.6;
+            color: var(--text-secondary);
+            font-family: var(--font-ui);
+            font-size: 11px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
         }
+
         .psalm-response {
+            font-family: var(--font-body);
             font-style: italic;
+            font-size: 1.05rem;
             color: var(--gold);
-            font-weight: 600;
+            font-weight: 400;
             text-align: center;
-            padding: 0.4rem 1rem;
+            padding: 0.5rem 1rem;
             margin: 0.75rem 0;
-            border-left: 3px solid var(--gold);
-            background: rgba(201,168,76,0.07);
-            border-radius: 0 4px 4px 0;
+            border-left: 2px solid var(--gold-muted);
+            background: rgba(201,168,76,0.05);
         }
+
         .psalm-verse {
+            font-family: var(--font-body);
             margin-bottom: 0.6rem;
             line-height: 1.9;
             padding-left: 0.25rem;
+            color: var(--text-primary);
+            font-size: 1.05rem;
         }
+
         .mass-offline {
             grid-column: 1 / -1;
             text-align: center;
             padding: 3rem;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            border-left: 5px solid var(--gold);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--gold-muted);
+            color: var(--text-secondary);
         }
 
-        /* Mobile responsive */
+        /* ── DIAMOND ORNAMENT DIVIDER ───────────────────────────────── */
+        .section-divider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .section-divider::before {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--gold-muted));
+        }
+
+        .section-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to left, transparent, var(--gold-muted));
+        }
+
+        .section-divider-diamond {
+            width: 6px;
+            height: 6px;
+            background: var(--gold-muted);
+            transform: rotate(45deg);
+            flex-shrink: 0;
+        }
+
+        /* ── TRANSLATION HIDDEN: CENTER ORIGINAL TEXT ──────────────── */
+        .facing-text:has(.translation-column.hidden) {
+            display: block;
+        }
+
+        .facing-text:has(.translation-column.hidden) .original-column {
+            border-right: none;
+            padding-right: 0;
+            max-width: 720px;
+            margin: 0 auto;
+        }
+
+        /* ── MOBILE RESPONSIVE ──────────────────────────────────────── */
         @media (max-width: 768px) {
             .facing-text {
                 grid-template-columns: 1fr;
                 gap: 2rem;
             }
-            
+
             .original-column {
                 border-right: none;
-                border-bottom: 2px solid #e0e0e0;
+                border-bottom: 1px solid var(--border);
                 padding-right: 0;
                 padding-bottom: 2rem;
             }
-            
+
             .translation-column {
                 padding-left: 0;
                 padding-top: 2rem;
             }
+        }
+
+        /* ── GAMIFICATION ──────────────────────────────────────────── */
+
+        .header-top {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            position: relative;
+        }
+
+        .header-stats {
+            position: absolute;
+            right: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .streak-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.4rem 0.85rem;
+            background: rgba(201,168,76,0.08);
+            border: 1px solid var(--border);
+            font-family: var(--font-ui);
+            transition: border-color 0.3s;
+        }
+
+        .streak-badge:hover { border-color: var(--gold); }
+
+        .streak-flame { font-size: 0.95rem; line-height: 1; }
+
+        .streak-count {
+            font-family: var(--font-ui);
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--gold);
+        }
+
+        .streak-label {
+            font-family: var(--font-ui);
+            font-size: 0.58rem;
+            letter-spacing: 0.15em;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .forms-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.4rem 0.85rem;
+            background: rgba(201,168,76,0.05);
+            border: 1px solid var(--border);
+        }
+
+        /* Per-text progress bar on cards */
+        .text-progress-bar {
+            height: 2px;
+            background: rgba(201,168,76,0.1);
+            margin-top: 1.25rem;
+            overflow: hidden;
+        }
+
+        .text-progress-fill {
+            height: 100%;
+            background: linear-gradient(to right, var(--gold-muted), var(--gold));
+            transition: width 0.6s ease;
+        }
+
+        .text-read-badge {
+            display: inline-block;
+            padding: 0.1rem 0.4rem;
+            background: rgba(201,168,76,0.12);
+            color: var(--gold-muted);
+            font-size: 0.56rem;
+            border: 1px solid rgba(201,168,76,0.3);
+            font-family: var(--font-ui);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-left: 0.5rem;
+            vertical-align: middle;
+        }
+
+        /* ── VOCABULARY LIBRARY ─────────────────────────────────── */
+
+        .vocab-library { padding-bottom: 4rem; }
+
+        .vocab-stats {
+            display: flex;
+            gap: 0;
+            justify-content: center;
+            margin-bottom: 2.5rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .vocab-stats::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--gold-muted), transparent);
+        }
+
+        .vocab-stat {
+            text-align: center;
+            padding: 2rem 2.5rem;
+            flex: 1;
+        }
+
+        .vocab-stat:not(:last-child) { border-right: 1px solid var(--border); }
+
+        .vocab-stat-num {
+            font-family: var(--font-ui);
+            font-size: 2.2rem;
+            font-weight: 600;
+            color: var(--gold);
+            line-height: 1.1;
+        }
+
+        .vocab-stat-label {
+            font-family: var(--font-ui);
+            font-size: 0.58rem;
+            letter-spacing: 0.15em;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-top: 0.3rem;
+        }
+
+        .vocab-progress-section { margin-bottom: 2.5rem; }
+
+        .vocab-progress-bar {
+            height: 4px;
+            background: rgba(201,168,76,0.08);
+            display: flex;
+            overflow: hidden;
+            margin-bottom: 0.75rem;
+        }
+
+        .vpb-seen    { background: rgba(201,168,76,0.35); height: 100%; transition: width 0.5s; }
+        .vpb-familiar{ background: rgba(201,168,76,0.65); height: 100%; transition: width 0.5s; }
+        .vpb-mastered{ background: var(--gold);           height: 100%; transition: width 0.5s; }
+
+        .vpb-labels { display: flex; gap: 1.5rem; }
+
+        .vpb-label {
+            font-family: var(--font-ui);
+            font-size: 0.56rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .vpb-label.seen     { color: rgba(201,168,76,0.55); }
+        .vpb-label.familiar { color: rgba(201,168,76,0.8);  }
+        .vpb-label.mastered { color: var(--gold);           }
+
+        .vocab-word-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-left: 3px solid transparent;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 0.6rem;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .vocab-word-card:hover {
+            border-left-color: var(--gold-muted);
+            background: var(--bg-tertiary);
+        }
+
+        .vocab-word-card.status-mastered { border-left-color: var(--gold); }
+        .vocab-word-card.status-familiar { border-left-color: var(--gold-muted); }
+
+        .vwc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 0.45rem;
+        }
+
+        .vwc-word {
+            font-family: var(--font-body) !important;
+            font-size: 1.35rem !important;
+            line-height: 1.3 !important;
+            color: var(--gold-pale) !important;
+        }
+
+        .vwc-status {
+            font-family: var(--font-ui);
+            font-size: 0.56rem;
+            letter-spacing: 0.15em;
+            padding: 0.15rem 0.5rem;
+            border: 1px solid;
+            text-transform: uppercase;
+        }
+
+        .vwc-status.seen     { color: rgba(201,168,76,0.55); border-color: rgba(201,168,76,0.2); }
+        .vwc-status.familiar { color: rgba(201,168,76,0.8);  border-color: rgba(201,168,76,0.4); }
+        .vwc-status.mastered { color: var(--gold);           border-color: var(--gold-muted);    }
+
+        .vwc-lemma {
+            font-family: var(--font-body);
+            font-style: italic;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.3rem;
+        }
+
+        .vwc-def {
+            font-family: var(--font-body);
+            font-size: 1rem;
+            line-height: 1.6;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .vwc-meta {
+            display: flex;
+            gap: 1rem;
+            font-family: var(--font-ui);
+            font-size: 0.56rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--gold-muted);
+            opacity: 0.75;
+        }
+
+        .vocab-section-heading {
+            font-family: var(--font-ui);
+            font-size: 0.62rem;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--gold-muted);
+            margin: 2rem 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .vocab-empty {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            padding: 4rem 2rem;
+            text-align: center;
+            font-family: var(--font-body);
+            font-style: italic;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            line-height: 1.8;
+            position: relative;
+        }
+
+        .vocab-empty::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--gold-muted), transparent);
+        }
+
+        /* ── SESSION SUMMARY OVERLAY ────────────────────────────── */
+
+        .session-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15,14,12,0.88);
+            backdrop-filter: blur(4px);
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .session-overlay.active { display: flex; }
+
+        .session-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--gold);
+            box-shadow: 0 8px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(201,168,76,0.1);
+            padding: 3rem 4rem;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+        }
+
+        .session-card::before {
+            content: '';
+            display: block;
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--gold-muted), transparent);
+            margin-bottom: 2rem;
+        }
+
+        .session-title {
+            font-family: var(--font-ui);
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--gold-pale);
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        .session-subtitle {
+            font-family: var(--font-body);
+            font-style: italic;
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .session-stats {
+            display: flex;
+            gap: 0;
+            justify-content: center;
+            margin: 2rem 0 2.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .session-stat { flex: 1; padding: 1.5rem 1rem; }
+        .session-stat:not(:last-child) { border-right: 1px solid var(--border); }
+
+        .session-stat-num {
+            font-family: var(--font-ui);
+            font-size: 2.2rem;
+            font-weight: 600;
+            color: var(--gold);
+            line-height: 1;
+        }
+
+        .session-stat-label {
+            font-family: var(--font-ui);
+            font-size: 0.56rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1 class="logo">CLASSICUS AI</h1>
-            <p class="subtitle">Classical & Biblical Texts with Interactive Dictionary</p>
+            <div class="header-top">
+                <h1 class="logo">ACADEMIA CLASSICA</h1>
+                <div class="header-stats">
+                    <div id="streak-badge" class="streak-badge" title="Reading streak"></div>
+                    <div class="forms-badge">
+                        <span class="streak-count" id="forms-counter">0</span>
+                        <span class="streak-label">Forms</span>
+                    </div>
+                </div>
+            </div>
+            <p class="subtitle">Classical &amp; Biblical Texts · Interactive Morphology</p>
         </header>
 
         <div class="lang-switcher">
             <button class="lang-btn active" onclick="switchMode('greek')">ἙΛΛΗΝΙΚΆ · Greek</button>
             <button class="lang-btn" onclick="switchMode('latin')">LATINA · Latin</button>
-            <button class="lang-btn" onclick="switchMode('bible')">📖 Novum Testamentum · The Gospels</button>
-            <button class="lang-btn" onclick="switchMode('mass')">📿 Daily Mass</button>
+            <button class="lang-btn" onclick="switchMode('bible')">Novum Testamentum · The Gospels</button>
+            <button class="lang-btn" onclick="switchMode('mass')">Daily Mass</button>
+            <button class="lang-btn" onclick="switchMode('vocab')">◆ Vocabulary</button>
         </div>
 
         <!-- Greek Library -->
@@ -634,6 +1220,33 @@
 
         <!-- Mass Library -->
         <div class="library mass-library" style="display:none;"></div>
+
+        <!-- Vocabulary Library -->
+        <div class="library vocab-library" style="display:none;"></div>
+    </div>
+
+    <!-- Session Summary Overlay -->
+    <div id="session-overlay" class="session-overlay">
+        <div class="session-card">
+            <div class="session-title">Session Summary</div>
+            <p class="session-subtitle">Well studied, scholar.</p>
+            <div class="section-divider"><div class="section-divider-diamond"></div></div>
+            <div class="session-stats">
+                <div class="session-stat">
+                    <div class="session-stat-num" id="session-words-count">0</div>
+                    <div class="session-stat-label">Words Looked Up</div>
+                </div>
+                <div class="session-stat">
+                    <div class="session-stat-num" id="session-forms-count">0</div>
+                    <div class="session-stat-label">New Forms</div>
+                </div>
+                <div class="session-stat">
+                    <div class="session-stat-num" id="session-streak-count">0</div>
+                    <div class="session-stat-label">Day Streak</div>
+                </div>
+            </div>
+            <button class="back-btn" onclick="document.getElementById('session-overlay').classList.remove('active')">Continue</button>
+        </div>
     </div>
 
     <!-- Reader Modal -->
@@ -4999,12 +5612,193 @@ Revolving such thoughts in her inflamed heart, the goddess came to Aeolia, the l
         let visibleBibleCols = { greek: true, latin: true, english: true };
         let currentTextId = null;
         let currentTextLang = null;
+        let currentTextTitle = null;
         let currentMassReadings = [];
         let massDate = '';
         let massGreekCache = null; // { date, data }
+        let sessionVocabCount = 0;
+        let sessionFormsCount = 0;
+
+        // ═══════════════════════════════════════════════════════════════
+        // GAMIFICATION SYSTEM
+        // ═══════════════════════════════════════════════════════════════
+
+        const LS_STREAK     = 'ac_streak';
+        const LS_LAST_VISIT = 'ac_last_visit';
+        const LS_VOCAB      = 'ac_vocab';
+        const LS_FORMS      = 'ac_forms';
+        const LS_PROGRESS   = 'ac_progress';
+
+        // ── Streak ───────────────────────────────────────────────────────────
+        function loadStreak() {
+            const streak    = JSON.parse(localStorage.getItem(LS_STREAK) || '{"count":0}');
+            const lastVisit = localStorage.getItem(LS_LAST_VISIT);
+            const today     = new Date().toDateString();
+            if (lastVisit === today) return streak.count;
+            const yesterday = new Date(Date.now() - 86400000).toDateString();
+            streak.count = (lastVisit === yesterday) ? streak.count + 1 : 1;
+            localStorage.setItem(LS_STREAK, JSON.stringify(streak));
+            localStorage.setItem(LS_LAST_VISIT, today);
+            return streak.count;
+        }
+
+        function renderStreakBadge() {
+            const count = loadStreak();
+            const el = document.getElementById('streak-badge');
+            if (!el) return;
+            el.innerHTML = `<span class="streak-flame">🔥</span><span class="streak-count">${count}</span><span class="streak-label">&nbsp;Day Streak</span>`;
+        }
+
+        // ── Vocabulary ───────────────────────────────────────────────────────
+        function loadVocab()      { return JSON.parse(localStorage.getItem(LS_VOCAB)  || '{}'); }
+        function saveVocab(v)     { localStorage.setItem(LS_VOCAB,  JSON.stringify(v)); }
+        function loadForms()      { return JSON.parse(localStorage.getItem(LS_FORMS)  || '{}'); }
+        function saveForms(f)     { localStorage.setItem(LS_FORMS,  JSON.stringify(f)); }
+        function loadProgress()   { return JSON.parse(localStorage.getItem(LS_PROGRESS) || '{}'); }
+        function saveProgress(p)  { localStorage.setItem(LS_PROGRESS, JSON.stringify(p)); }
+
+        function getVocabStatus(count) {
+            if (count >= 6) return 'mastered';
+            if (count >= 3) return 'familiar';
+            return 'seen';
+        }
+
+        function logWordLookup(word, lemma, definition, lang, textId, textTitle) {
+            const vocab = loadVocab();
+            const key = word + '|' + lang;
+            if (!vocab[key]) {
+                vocab[key] = { word, lemma: lemma || word, definition: definition || '', lang,
+                               textId, textTitle, count: 0, firstSeen: Date.now() };
+            }
+            vocab[key].count++;
+            if (definition && !vocab[key].definition) vocab[key].definition = definition;
+            if (lemma && !vocab[key].lemma)           vocab[key].lemma = lemma;
+            saveVocab(vocab);
+            sessionVocabCount++;
+        }
+
+        function logFormEncountered(analyses) {
+            const forms = loadForms();
+            let newForms = 0;
+            for (const a of (analyses || [])) {
+                if (!a.details) continue;
+                const parts = [];
+                if (a.details.tense)  parts.push(a.details.tense);
+                if (a.details.mood)   parts.push(a.details.mood);
+                if (a.details.voice)  parts.push(a.details.voice);
+                if (a.details.case)   parts.push(a.details.case);
+                if (a.details.number) parts.push(a.details.number);
+                if (a.details.gender) parts.push(a.details.gender);
+                if (a.pos)            parts.push(a.pos);
+                const formKey = parts.join(' ');
+                if (formKey && !forms[formKey]) { forms[formKey] = 0; newForms++; }
+                if (formKey) forms[formKey]++;
+            }
+            saveForms(forms);
+            sessionFormsCount += newForms;
+            updateFormsCounter();
+            return newForms;
+        }
+
+        function updateFormsCounter() {
+            const el = document.getElementById('forms-counter');
+            if (el) el.textContent = Object.keys(loadForms()).length;
+        }
+
+        function markTextOpened(textId, lang) {
+            const progress = loadProgress();
+            const key = lang + '_' + textId;
+            if (!progress[key]) progress[key] = { textId, lang, opened: true };
+            saveProgress(progress);
+        }
+
+        // ── Session summary ──────────────────────────────────────────────────
+        function showSessionSummary() {
+            if (sessionVocabCount === 0 && sessionFormsCount === 0) return;
+            const streak = JSON.parse(localStorage.getItem(LS_STREAK) || '{"count":1}').count;
+            document.getElementById('session-words-count').textContent = sessionVocabCount;
+            document.getElementById('session-forms-count').textContent = sessionFormsCount;
+            document.getElementById('session-streak-count').textContent = streak;
+            document.getElementById('session-overlay').classList.add('active');
+            sessionVocabCount = 0;
+            sessionFormsCount = 0;
+        }
+
+        // ── Vocabulary tab rendering ─────────────────────────────────────────
+        function renderVocabLibrary() {
+            const vocab   = loadVocab();
+            const forms   = loadForms();
+            const library = document.querySelector('.vocab-library');
+            const entries = Object.values(vocab).sort((a, b) => b.count - a.count);
+
+            const seen     = entries.filter(e => getVocabStatus(e.count) === 'seen');
+            const familiar = entries.filter(e => getVocabStatus(e.count) === 'familiar');
+            const mastered = entries.filter(e => getVocabStatus(e.count) === 'mastered');
+            const totalForms = Object.keys(forms).length;
+            const total      = entries.length || 1;
+
+            if (!entries.length) {
+                library.innerHTML = `
+                    <div class="vocab-empty">
+                        <p>No vocabulary logged yet.</p>
+                        <p style="margin-top:1rem;font-size:0.9rem;opacity:0.7;">Click any Greek or Latin word while reading to look it up — it will appear here automatically.</p>
+                    </div>`;
+                return;
+            }
+
+            const groupHTML = (group, label) => group.length ? `
+                <div class="vocab-section-heading">${label} &nbsp;(${group.length})</div>
+                ${group.map(e => {
+                    const status = getVocabStatus(e.count);
+                    return `<div class="vocab-word-card status-${status}">
+                        <div class="vwc-header">
+                            <span class="vwc-word ${e.lang === 'greek' ? 'greek-text' : 'latin-text'}">${e.word}</span>
+                            <span class="vwc-status ${status}">${status}</span>
+                        </div>
+                        ${e.lemma ? `<div class="vwc-lemma">${e.lemma}</div>` : ''}
+                        ${e.definition ? `<div class="vwc-def">${e.definition}</div>` : ''}
+                        <div class="vwc-meta">
+                            <span>${e.lang === 'greek' ? 'Greek' : 'Latin'}</span>
+                            ${e.textTitle ? `<span>${e.textTitle.split('—')[0].split('-')[0].trim()}</span>` : ''}
+                            <span>${e.count} lookup${e.count !== 1 ? 's' : ''}</span>
+                        </div>
+                    </div>`;
+                }).join('')}` : '';
+
+            library.innerHTML = `
+                <div class="vocab-stats">
+                    <div class="vocab-stat"><div class="vocab-stat-num">${seen.length}</div><div class="vocab-stat-label">Seen</div></div>
+                    <div class="vocab-stat"><div class="vocab-stat-num">${familiar.length}</div><div class="vocab-stat-label">Familiar</div></div>
+                    <div class="vocab-stat"><div class="vocab-stat-num">${mastered.length}</div><div class="vocab-stat-label">Mastered</div></div>
+                    <div class="vocab-stat"><div class="vocab-stat-num">${totalForms}</div><div class="vocab-stat-label">Forms</div></div>
+                </div>
+                <div class="vocab-progress-section">
+                    <div class="vocab-progress-bar">
+                        <div class="vpb-mastered" style="width:${mastered.length/total*100}%"></div>
+                        <div class="vpb-familiar"  style="width:${familiar.length/total*100}%"></div>
+                        <div class="vpb-seen"      style="width:${seen.length/total*100}%"></div>
+                    </div>
+                    <div class="vpb-labels">
+                        <span class="vpb-label seen">Seen &mdash; 1+ lookups</span>
+                        <span class="vpb-label familiar">Familiar &mdash; 3+</span>
+                        <span class="vpb-label mastered">Mastered &mdash; 6+</span>
+                    </div>
+                </div>
+                ${groupHTML(mastered, 'Mastered')}
+                ${groupHTML(familiar, 'Familiar')}
+                ${groupHTML(seen,     'Seen')}
+            `;
+        }
+
+        // ── Init gamification ────────────────────────────────────────────────
+        function initGamification() {
+            renderStreakBadge();
+            updateFormsCounter();
+        }
 
         function init() {
             renderLibrary('greek');
+            initGamification();
         }
 
         function switchMode(mode) {
@@ -5018,7 +5812,8 @@ Revolving such thoughts in her inflamed heart, the goddess came to Aeolia, the l
             document.querySelector('.greek-library').style.display = mode === 'greek' ? 'grid' : 'none';
             document.querySelector('.latin-library').style.display = mode === 'latin' ? 'grid' : 'none';
             document.querySelector('.bible-library').style.display = mode === 'bible' ? 'grid' : 'none';
-            document.querySelector('.mass-library').style.display = mode === 'mass' ? 'grid' : 'none';
+            document.querySelector('.mass-library').style.display  = mode === 'mass'  ? 'grid' : 'none';
+            document.querySelector('.vocab-library').style.display = mode === 'vocab' ? 'block' : 'none';
 
             if (mode === 'greek' || mode === 'latin') {
                 renderLibrary(mode);
@@ -5026,21 +5821,30 @@ Revolving such thoughts in her inflamed heart, the goddess came to Aeolia, the l
                 renderBibleLibrary();
             } else if (mode === 'mass') {
                 renderMassLibrary();
+            } else if (mode === 'vocab') {
+                renderVocabLibrary();
             }
         }
 
         function renderLibrary(lang) {
-            const library = document.querySelector('.' + lang + '-library');
-            library.innerHTML = texts[lang].map(text => `
+            const library  = document.querySelector('.' + lang + '-library');
+            const progress = loadProgress();
+            library.innerHTML = texts[lang].map(text => {
+                const hasRead = !!(progress[lang + '_' + text.id]);
+                return `
                 <div class="text-card" onclick="openText(${text.id}, '${lang}')">
                     <div>
                         <span class="text-level">${text.level.toUpperCase()}</span>
+                        ${hasRead ? '<span class="text-read-badge">Read</span>' : ''}
                     </div>
                     <h3 class="text-title">${text.title}</h3>
                     <div class="text-meta">${text.author}</div>
                     <div class="text-desc">${text.description}</div>
-                </div>
-            `).join('');
+                    <div class="text-progress-bar">
+                        <div class="text-progress-fill" style="width:${hasRead ? '100' : '0'}%"></div>
+                    </div>
+                </div>`;
+            }).join('');
         }
 
         function renderBibleLibrary() {
@@ -5071,10 +5875,12 @@ Revolving such thoughts in her inflamed heart, the goddess came to Aeolia, the l
 
         function openText(id, lang) {
             const text = texts[lang].find(t => t.id === id);
-            currentTextId = id;
-            currentTextLang = lang;
-            currentLang = lang;
+            currentTextId    = id;
+            currentTextLang  = lang;
+            currentTextTitle = text.title;
+            currentLang      = lang;
             translationVisible = true;
+            markTextOpened(id, lang);
 
             document.getElementById('reader-title').textContent = text.title;
             document.getElementById('toggle-trans-btn').textContent = 'Hide Translation';
@@ -5086,15 +5892,15 @@ Revolving such thoughts in her inflamed heart, the goddess came to Aeolia, the l
             document.getElementById('reader-body').innerHTML = `
                 <div class="facing-text">
                     <div class="original-column">
-                        <h3 style="font-family: 'IBM Plex Mono', monospace; font-size: 0.9rem; text-transform: uppercase; color: var(--gold); margin-bottom: 1.5rem;">
-                            ${lang === 'greek' ? 'Ἑλληνικά - Original Greek' : 'Latina - Original Latin'}
+                        <h3 style="font-family: var(--font-ui); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--gold-muted); margin-bottom: 1.5rem;">
+                            ${lang === 'greek' ? 'Ἑλληνικά · Original Greek' : 'Latina · Original Latin'}
                         </h3>
                         <div class="${textClass}" style="white-space: pre-line;">
 ${clickableOriginal}
                         </div>
                     </div>
                     <div class="translation-column" id="translation-column">
-                        <h3 style="font-family: 'IBM Plex Mono', monospace; font-size: 0.9rem; text-transform: uppercase; color: #666; margin-bottom: 1.5rem;">
+                        <h3 style="font-family: var(--font-ui); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--gold-muted); margin-bottom: 1.5rem;">
                             English Translation
                         </h3>
                         <div class="translation-text" style="white-space: pre-line;">
@@ -5290,6 +6096,12 @@ ${text.translation}
             }).join('');
 
             content.innerHTML = `<div class="dict-word">${word}</div>${analysesHTML}`;
+
+            // Log vocabulary and forms
+            const firstLemma = analyses[0]?.lemma || null;
+            const firstDef   = firstLemma ? (defs[firstLemma] || null) : null;
+            logWordLookup(word, firstLemma, firstDef, lang, currentTextId, currentTextTitle || '');
+            logFormEncountered(analyses);
         }
         function closeDictionary() {
             document.getElementById('dict-popup').classList.remove('active');
@@ -5299,6 +6111,7 @@ ${text.translation}
         function closeReader() {
             document.getElementById('reader').classList.remove('active');
             closeDictionary();
+            showSessionSummary();
         }
 
         // ── Bible chapter navigation ─────────────────────────────────────────
@@ -5400,7 +6213,7 @@ ${text.translation}
             library.innerHTML = `
                 <div class="mass-loading">
                     <div class="dict-spinner" style="width:28px;height:28px;border-width:4px;margin:0 auto 1rem;"></div>
-                    <p style="font-family:'IBM Plex Mono',monospace; font-size:0.9rem;">Loading today's Mass readings…</p>
+                    <p style="font-family:var(--font-ui); font-size:11px; letter-spacing:0.2em; text-transform:uppercase;">Loading today's Mass readings…</p>
                 </div>`;
 
             let massData;
@@ -5447,18 +6260,17 @@ ${text.translation}
 
             library.innerHTML = `
                 <div class="text-card" style="border-left-color:var(--gold);cursor:default;pointer-events:none;">
-                    <div class="text-title" style="color:var(--gold);">📿 ${todayLabel}</div>
+                    <div class="text-title" style="color:var(--gold);">${todayLabel}</div>
                     <div class="text-meta">Today's Mass Readings · Universalis</div>
                 </div>
                 ${currentMassReadings.map((r, i) => `
                     <div class="text-card" onclick="openMassReading(${i})">
-                        <div><span class="reading-card-badge">${r.heading}</span></div>
                         <h3 class="text-title">${r.heading}</h3>
                         <div class="text-meta">${r.source}</div>
                         <div style="margin-top:0.5rem;">
                             ${r.hasGreek
-                                ? '<span style="color:var(--greek-primary);font-size:0.8rem;font-family:\'IBM Plex Mono\',monospace;">● Greek available</span>'
-                                : '<span style="opacity:0.4;font-size:0.8rem;font-family:\'IBM Plex Mono\',monospace;">○ English only</span>'}
+                                ? '<span style="color:var(--gold);font-size:0.65rem;font-family:var(--font-ui);letter-spacing:0.1em;text-transform:uppercase;">● Greek available</span>'
+                                : '<span style="opacity:0.4;font-size:0.65rem;font-family:var(--font-ui);letter-spacing:0.1em;text-transform:uppercase;">○ English only</span>'}
                         </div>
                         <div class="text-desc" style="margin-top:0.5rem;">${r.preview}…</div>
                     </div>
@@ -5607,7 +6419,7 @@ ${text.translation}
                 const lines = readingData.greek.map(v =>
                     `<p class="verse-para"><span class="verse-inline-num">${v.v}</span>${makeWordClickable(v.t, 'greek')}</p>`
                 ).join('');
-                leftContent = `<h3 class="col-heading" style="color:var(--greek-primary);">Ἑλληνικά</h3>
+                leftContent = `<h3 class="col-heading" style="color:var(--gold-muted);">Ἑλληνικά</h3>
                     <div class="greek-text">${lines}</div>`;
             } else {
                 // Fall back to embedded BIBLE_TEXTS (Gospels only)
@@ -5617,7 +6429,7 @@ ${text.translation}
                     const lines = verses.map((v, i) =>
                         `<p class="verse-para"><span class="verse-inline-num">${citation.v1 + i}</span>${makeWordClickable(v.g, 'greek')}</p>`
                     ).join('');
-                    leftContent = `<h3 class="col-heading" style="color:var(--greek-primary);">Ἑλληνικά</h3>
+                    leftContent = `<h3 class="col-heading" style="color:var(--gold-muted);">Ἑλληνικά</h3>
                         <div class="greek-text">${lines}</div>`;
                 } else {
                     leftContent = `<h3 class="col-heading" style="color:var(--gold);">${reading.source || 'Source'}</h3>
@@ -5626,25 +6438,12 @@ ${text.translation}
             }
 
             // ── English column ────────────────────────────────────────────────
-            // Prefer website English (Jerusalem Bible, verse-aligned); fall back to JSONP
-            let rightContent;
-            if (readingData && readingData.english && readingData.english.length) {
-                let lastV = null;
-                const lines = readingData.english.map(item => {
-                    const newV = item.v !== null && item.v !== lastV;
-                    if (newV) lastV = item.v;
-                    const vSpan = newV
-                        ? `<span class="verse-inline-num">${item.v}</span>`
-                        : `<span class="verse-inline-num" style="visibility:hidden;">·</span>`;
-                    return `<p class="verse-para">${vSpan}${item.t}</p>`;
-                }).join('');
-                rightContent = `<h3 class="col-heading" style="color:#666;">English</h3>
-                    <div class="translation-text">${lines}</div>`;
-            } else {
-                const englishParas = formatMassText(reading.rawHTML, reading.type);
-                rightContent = `<h3 class="col-heading" style="color:#666;">English</h3>
-                    <div class="translation-text">${englishParas}</div>`;
-            }
+            // Always use the Universalis JSONP text (reading.rawHTML) — it's the
+            // authoritative Universalis translation. The scraped /G/ page uses a
+            // different version and verse alignment is unreliable.
+            const englishParas = formatMassText(reading.rawHTML, reading.type);
+            const rightContent = `<h3 class="col-heading" style="color:var(--text-secondary);">English</h3>
+                <div class="translation-text">${englishParas}</div>`;
 
             document.getElementById('mass-greek-col').innerHTML = leftContent;
             document.getElementById('mass-eng-col').innerHTML = rightContent;
