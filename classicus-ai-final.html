@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Academia Classica · Classical &amp; Biblical Texts</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#c9a84c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Academia">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -1603,7 +1609,9 @@
                     title: "Homer's Odyssey - Book 1 (Lines 1-21)",
                     author: "Homer (8th century BC)",
                     level: "advanced",
-                    description: "The opening proem of the Odyssey. The invocation to the Muse, introducing the wandering hero and his companions' fate.",
+                    poetry: true,
+                    lineStart: 1,
+                    description: "The opening proem of the Odyssey.",
                     content: `Ἄνδρα μοι ἔννεπε, Μοῦσα, πολύτροπον, ὃς μάλα πολλὰ
 πλάγχθη, ἐπεὶ Τροίης ἱερὸν πτολίεθρον ἔπερσε·
 πολλῶν δ᾽ ἀνθρώπων ἴδεν ἄστεα καὶ νόον ἔγνω,
@@ -1652,7 +1660,7 @@ These men, then, as I say, have said little or nothing true; but from me you sha
                     title: "Xenophon's Anabasis - Book 1, Chapter 1",
                     author: "Xenophon (c. 430-354 BC)",
                     level: "intermediate",
-                    description: "The opening of the Anabasis. Historical narrative about Cyrus and the Ten Thousand.",
+                    description: "The opening of the Anabasis.",
                     content: `Δαρείου καὶ Παρυσάτιδος γίγνονται παῖδες δύο, πρεσβύτερος μὲν Ἀρταξέρξης, νεώτερος δὲ Κῦρος· ἐπεὶ δὲ ἠσθένει Δαρεῖος καὶ ὑπώπτευε τελευτὴν τοῦ βίου, ἐβούλετο τὼ παῖδε ἀμφοτέρω παρεῖναι.
 
 Ὁ μὲν οὖν πρεσβύτερος παρὼν ἐτύγχανε· Κῦρον δὲ μεταπέμπεται ἀπὸ τῆς ἀρχῆς ἧς αὐτὸν σατράπην ἐποίησε, καὶ στρατηγὸν δὲ αὐτὸν ἀπέδειξε πάντων ὅσοι εἰς Καστωλοῦ πεδίον ἁθροίζονται.
@@ -1736,7 +1744,7 @@ When Socrates had said this, some of them praised his speech, and Aristophanes  
                     title: "Caesar's Gallic Wars - Book 1, Opening",
                     author: "Julius Caesar (100-44 BC)",
                     level: "intermediate",
-                    description: "The famous opening describing Gaul's geography and peoples. Clear military prose.",
+                    description: "The famous opening describing Gaul's geography and peoples.",
                     content: `Gallia est omnis divisa in partes tres, quarum unam incolunt Belgae, aliam Aquitani, tertiam qui ipsorum lingua Celtae, nostra Galli appellantur.
 
 Hi omnes lingua, institutis, legibus inter se differunt. Gallos ab Aquitanis Garumna flumen, a Belgis Matrona et Sequana dividit.
@@ -1765,7 +1773,7 @@ The Belgae rise from the extreme frontier of Gaul, extend to the lower part of t
                     title: "Cicero's First Catiline Oration - Opening",
                     author: "Marcus Tullius Cicero (106-43 BC)",
                     level: "advanced",
-                    description: "The famous opening of Cicero's speech against Catiline. Complex periodic sentences.",
+                    description: "The famous opening of Cicero's speech against Catiline.",
                     content: `Quo usque tandem abutere, Catilina, patientia nostra? Quam diu etiam furor iste tuus nos eludet? Quem ad finem sese effrenata iactabit audacia? Nihilne te nocturnum praesidium Palati, nihil urbis vigiliae, nihil timor populi, nihil concursus bonorum omnium, nihil hic munitissimus habendi senatus locus, nihil horum ora voltusque moverunt?
 
 Patere tua consilia non sentis, constrictam iam horum omnium scientia teneri coniurationem tuam non vides? Quid proxima, quid superiore nocte egeris, ubi fueris, quos convocaveris, quid consilii ceperis, quem nostrum ignorare arbitraris?
@@ -1786,7 +1794,9 @@ Long ago, Catiline, you ought to have been led to death by the consul's command,
                     title: "Vergil's Aeneid - Book I (Opening, Lines 1–63)",
                     author: "Publius Vergilius Maro (70-19 BC)",
                     level: "advanced",
-                    description: "The opening of Vergil's Aeneid. Dactylic hexameter covering the invocation, Juno's wrath, the Trojans at sea, and the introduction of Aeolus.",
+                    poetry: true,
+                    lineStart: 1,
+                    description: "The opening of Vergil's Aeneid.",
                     content: `Arma virumque cano, Troiae qui primus ab oris
 Italiam, fato profugus, Laviniaque venit
 litora, multum ille et terris iactatus et alto
@@ -6128,6 +6138,25 @@ Revolving such thoughts in her inflamed heart, the goddess came to Aeolia, the l
             }).join('');
         }
 
+        function renderPoetryWithLineNumbers(content, lang, lineStart) {
+            const lines = content.split('\n');
+            let html = '';
+            let lineNum = lineStart;
+            for (const line of lines) {
+                if (line.trim() === '') {
+                    html += '<div class="poetry-line" style="margin-bottom:0.8rem;"></div>';
+                } else {
+                    const numLabel = (lineNum % 5 === 0)
+                        ? `<span class="line-num">${lineNum}</span>`
+                        : `<span class="line-num"></span>`;
+                    const clickable = makeWordClickable(line, lang);
+                    html += `<div class="poetry-line">${numLabel}${clickable}</div>`;
+                    lineNum++;
+                }
+            }
+            return html;
+        }
+
         function openText(id, lang) {
             const text = texts[lang].find(t => t.id === id);
             currentTextId    = id;
@@ -6142,7 +6171,10 @@ Revolving such thoughts in her inflamed heart, the goddess came to Aeolia, the l
             document.getElementById('toggle-trans-btn').style.display = 'block';
 
             const textClass = lang === 'greek' ? 'greek-text' : 'latin-text';
-            const clickableOriginal = makeWordClickable(text.content, lang);
+            const clickableOriginal = text.poetry
+                ? renderPoetryWithLineNumbers(text.content, lang, text.lineStart || 1)
+                : makeWordClickable(text.content, lang);
+            const originalStyle = text.poetry ? '' : 'white-space: pre-line;';
 
             document.getElementById('reader-body').innerHTML = `
                 <div class="facing-text">
@@ -6150,7 +6182,7 @@ Revolving such thoughts in her inflamed heart, the goddess came to Aeolia, the l
                         <h3 style="font-family: var(--font-ui); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--gold-muted); margin-bottom: 1.5rem;">
                             ${lang === 'greek' ? 'Ἑλληνικά · Original Greek' : 'Latina · Original Latin'}
                         </h3>
-                        <div class="${textClass}" style="white-space: pre-line;">
+                        <div class="${textClass}" style="${originalStyle}">
 ${clickableOriginal}
                         </div>
                     </div>
@@ -6366,7 +6398,7 @@ ${text.translation}
         function closeReader() {
             document.getElementById('reader').classList.remove('active');
             closeDictionary();
-            showSessionSummary();
+            if (currentMode !== 'mass') showSessionSummary();
         }
 
         // ── Bible chapter navigation ─────────────────────────────────────────
@@ -6706,6 +6738,11 @@ ${text.translation}
         }
 
         window.onload = () => { init(); loadMorphData(); };
+
+        // Register service worker for PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(() => {});
+        }
     </script>
 </body>
 </html>
