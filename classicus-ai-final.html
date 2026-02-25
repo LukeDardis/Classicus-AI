@@ -5646,21 +5646,64 @@ Revolving such thoughts in her inflamed heart, the goddess came to Aeolia, the l
             const count = loadStreak();
             const el = document.getElementById('streak-badge');
             if (!el) return;
-            el.innerHTML = `<span class="streak-flame"><svg width="12" height="22" viewBox="0 0 12 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- handle -->
-  <rect x="4.5" y="13" width="3" height="7" rx="0.5" fill="#7a5c28"/>
-  <!-- grip wrapping lines -->
-  <line x1="4.5" y1="15" x2="7.5" y2="15" stroke="#5a3e18" stroke-width="0.6"/>
-  <line x1="4.5" y1="17" x2="7.5" y2="17" stroke="#5a3e18" stroke-width="0.6"/>
-  <line x1="4.5" y1="19" x2="7.5" y2="19" stroke="#5a3e18" stroke-width="0.6"/>
-  <!-- cup / tray -->
-  <path d="M3 13 Q3 11.5 6 11.5 Q9 11.5 9 13 Z" fill="#9a7a32"/>
-  <!-- outer flame -->
-  <path d="M6 1 C6 1 9.5 4.5 9.5 8 C9.5 10.5 8.5 12 6 12 C3.5 12 2.5 10.5 2.5 8 C2.5 4.5 6 1 6 1Z" fill="#c9a84c" opacity="0.9"/>
-  <!-- mid flame -->
-  <path d="M6 3.5 C6 3.5 8 6 8 8.5 C8 10 7.2 11 6 11 C4.8 11 4 10 4 8.5 C4 6 6 3.5 6 3.5Z" fill="#e8d5a3" opacity="0.75"/>
-  <!-- inner core -->
-  <path d="M6 6 C6 6 7 7.5 7 8.8 C7 9.6 6.6 10.2 6 10.2 C5.4 10.2 5 9.6 5 8.8 C5 7.5 6 6 6 6Z" fill="#fff8e8" opacity="0.5"/>
+            el.innerHTML = `<span class="streak-flame"><svg width="13" height="24" viewBox="0 0 13 24" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Wood grain gradient: dark edges, lighter centre -->
+    <linearGradient id="hg" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#2e1a08"/>
+      <stop offset="35%"  stop-color="#7a5220"/>
+      <stop offset="55%"  stop-color="#9a6e30"/>
+      <stop offset="100%" stop-color="#2e1a08"/>
+    </linearGradient>
+    <!-- Flame: radial, bright ivory core at lower-centre fading to deep amber at edges/tip -->
+    <radialGradient id="rfg" cx="44%" cy="74%" r="56%" fx="43%" fy="76%">
+      <stop offset="0%"   stop-color="#fffce8" stop-opacity="1"/>
+      <stop offset="22%"  stop-color="#f0d878" stop-opacity="0.97"/>
+      <stop offset="50%"  stop-color="#c98840" stop-opacity="0.88"/>
+      <stop offset="76%"  stop-color="#904820" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#5a2808" stop-opacity="0.08"/>
+    </radialGradient>
+    <!-- Soft ambient glow behind flame -->
+    <radialGradient id="rgl" cx="46%" cy="62%" r="52%">
+      <stop offset="0%"   stop-color="#c9a84c" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#c9a84c" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Ambient glow -->
+  <ellipse cx="6.2" cy="8.5" rx="5.8" ry="7.5" fill="url(#rgl)"/>
+
+  <!-- Outer flame: leans left, irregular silhouette -->
+  <path d="M6.4 1
+    C5.6 2.8 3.0 5.2 3.0 8.6
+    C3.0 11.4 4.4 13.2 6.4 13.2
+    C8.4 13.2 9.9 11.4 9.9 8.6
+    C9.9 5.4 7.4 3.2 6.4 1Z"
+    fill="url(#rfg)"/>
+
+  <!-- Left tongue: tall, veers left, tapers sharply -->
+  <path d="M6.4 1.5 C5.2 4.0 3.4 6.2 4.2 9.2 C4.8 11.4 6.0 12.6 6.4 13.2"
+    fill="#b87030" opacity="0.30"/>
+
+  <!-- Right tongue: shorter, slightly displaced -->
+  <path d="M6.6 2.8 C8.0 5.0 9.6 6.8 8.9 9.4 C8.4 11.2 7.4 12.4 6.4 13.2"
+    fill="#c09040" opacity="0.22"/>
+
+  <!-- Central spine: narrow bright streak, bottom-anchored -->
+  <path d="M6.4 5.0 C6.9 7.0 7.4 9.2 6.4 12.0 C5.4 9.2 5.9 7.0 6.4 5.0Z"
+    fill="#fffce8" opacity="0.58"/>
+
+  <!-- Cup / ferrule -->
+  <path d="M3.8 15.0 Q3.6 13.4 6.4 13.1 Q9.2 13.4 9.0 15.0Z" fill="#9a7a32"/>
+  <path d="M4.2 14.6 Q6.4 14.0 8.8 14.6" stroke="#c9a84c" stroke-width="0.35" fill="none" opacity="0.65"/>
+
+  <!-- Handle -->
+  <rect x="4.9" y="15.0" width="3" height="8.5" rx="0.4" fill="url(#hg)"/>
+  <!-- Binding bands -->
+  <rect x="4.9" y="16.3" width="3" height="0.45" rx="0.2" fill="#1c0e04" opacity="0.55"/>
+  <rect x="4.9" y="18.0" width="3" height="0.45" rx="0.2" fill="#1c0e04" opacity="0.55"/>
+  <rect x="4.9" y="19.7" width="3" height="0.45" rx="0.2" fill="#1c0e04" opacity="0.55"/>
+  <rect x="4.9" y="21.4" width="3" height="0.45" rx="0.2" fill="#1c0e04" opacity="0.55"/>
 </svg></span><span class="streak-count">${count}</span><span class="streak-label">&nbsp;Day Streak</span>`;
         }
 
