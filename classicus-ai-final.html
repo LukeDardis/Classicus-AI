@@ -1229,7 +1229,6 @@
     <div id="session-overlay" class="session-overlay">
         <div class="session-card">
             <div class="session-title">Session Summary</div>
-            <p class="session-subtitle">Well studied, scholar.</p>
             <div class="section-divider"><div class="section-divider-diamond"></div></div>
             <div class="session-stats">
                 <div class="session-stat">
@@ -1435,7 +1434,7 @@ Now all the rest, as many as had escaped sheer destruction, were at home, safe f
                     title: "Plato's Apology - Opening Defense",
                     author: "Plato (c. 428-348 BC)",
                     level: "intermediate",
-                    description: "Socrates' speech at his trial. Clear Attic prose showing philosophical argument and rhetoric.",
+                    description: "Socrates' speech at his trial.",
                     content: `Ὅτι μὲν ὑμεῖς, ὦ ἄνδρες Ἀθηναῖοι, πεπόνθατε ὑπὸ τῶν ἐμῶν κατηγόρων, οὐκ οἶδα· ἐγὼ δ᾽ οὖν καὶ αὐτὸς ὑπ᾽ αὐτῶν ὀλίγου ἐμαυτοῦ ἐπελαθόμην, οὕτω πιθανῶς ἔλεγον. Καίτοι ἀληθές γε ὡς ἔπος εἰπεῖν οὐδὲν εἰρήκασιν. Μάλιστα δὲ αὐτῶν ἓν ἐθαύμασα τῶν πολλῶν ὧν ἐψεύσαντο, τοῦτο ἐν ᾧ ἔλεγον ὡς χρῆν ὑμᾶς εὐλαβεῖσθαι μὴ ὑπ᾽ ἐμοῦ ἐξαπατηθῆτε ὡς δεινοῦ ὄντος λέγειν.
 
 Τὸ γὰρ μὴ αἰσχυνθῆναι ὅτι αὐτίκα ὑπ᾽ ἐμοῦ ἐξελεγχθήσονται ἔργῳ, ἐπειδὰν μηδ᾽ ὁπωστιοῦν φαίνωμαι δεινὸς λέγειν, τοῦτό μοι ἔδοξεν αὐτῶν ἀναισχυντότατον εἶναι, εἰ μὴ ἄρα δεινὸν καλοῦσιν οὗτοι λέγειν τὸν τἀληθῆ λέγοντα. Εἰ μὲν γὰρ τοῦτο λέγουσιν, ὁμολογοίην ἂν ἔγωγε οὐ κατὰ τούτους εἶναι ῥήτωρ.
@@ -5909,9 +5908,6 @@ Revolving such thoughts in her inflamed heart, the goddess came to Aeolia, the l
             const library = document.querySelector('.bible-library');
             library.innerHTML = BIBLE_BOOKS.map(book => `
                 <div class="text-card" onclick="openBibleBook('${book.id}')">
-                    <div>
-                        <span class="text-level">NT</span>
-                    </div>
                     <h3 class="text-title">${book.name} (${book.greek})</h3>
                     <div class="text-meta">New Testament · Greek (Nestle 1904) · Latin (Vulgate) · KJV</div>
                     <div class="text-desc">Three-column polyglot format with ${book.chapters} chapters</div>
@@ -6308,6 +6304,7 @@ ${text.translation}
                 const citation = parseMassSource(src);
                 currentMassReadings.push({
                     type: key,
+                    label,
                     heading,
                     source: src,
                     rawHTML,
@@ -6319,11 +6316,11 @@ ${text.translation}
             library.innerHTML = `
                 <div class="text-card" style="border-left-color:var(--gold);cursor:default;pointer-events:none;">
                     <div class="text-title" style="color:var(--gold);">${todayLabel}</div>
-                    <div class="text-meta">Today's Mass Readings · Universalis</div>
+                    <div class="text-meta">Today's Mass Readings</div>
                 </div>
                 ${currentMassReadings.map((r, i) => `
                     <div class="text-card" onclick="openMassReading(${i})">
-                        <h3 class="text-title">${r.heading}</h3>
+                        <h3 class="text-title">${r.label}</h3>
                         <div class="text-meta">${r.source}</div>
                         <div style="margin-top:0.5rem;">
                             ${r.hasGreek
