@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Academia">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Cinzel:wght@400;600&family=Noto+Serif:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Cinzel:wght@400;600&family=Noto+Serif:ital,wght@0,400;1,400&family=GFS+Didot&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-primary: #0f0e0c;
@@ -169,6 +169,12 @@
         body.latin-mode .text-title,
         body.bible-mode .text-title,
         body.mass-mode .text-title { color: var(--gold-pale); }
+
+        .greek-title-text {
+            font-family: 'GFS Didot', 'Noto Serif', Georgia, serif;
+            font-weight: 400;
+            letter-spacing: 0.02em;
+        }
 
         .text-meta {
             font-family: var(--font-ui);
@@ -6147,7 +6153,7 @@ Revolving such thoughts in her inflamed heart, the goddess came to Aeolia, the l
             const library = document.querySelector('.bible-library');
             library.innerHTML = BIBLE_BOOKS.map(book => `
                 <div class="text-card" onclick="openBibleBook('${book.id}')">
-                    <h3 class="text-title">${book.name} (${book.greek})</h3>
+                    <h3 class="text-title">${book.name} <span class="greek-title-text">(${book.greek})</span></h3>
                     <div class="text-meta">New Testament · Greek (Nestle 1904) · Latin (Vulgate) · KJV</div>
                     <div class="text-desc">Three-column polyglot format with ${book.chapters} chapters</div>
                 </div>
