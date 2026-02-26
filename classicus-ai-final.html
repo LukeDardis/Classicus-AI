@@ -98,14 +98,14 @@
 
         .lang-btn {
             padding: 0.55rem 1.4rem;
-            border: 1px solid var(--border);
+            border: 1px solid rgba(201,168,76,0.38);
             background: transparent;
             cursor: pointer;
             font-family: var(--font-ui);
             font-weight: 400;
             font-size: 11px;
             letter-spacing: 0.2em;
-            color: var(--text-secondary);
+            color: #d8cfbc;
             transition: all 0.3s;
             text-transform: uppercase;
         }
@@ -1394,6 +1394,19 @@
 
         .word.selected {
             text-shadow: 0 0 20px rgba(201,168,76,0.5);
+        }
+
+        /* 6 ── Greek weight match: Cinzel has no Greek glyphs; Noto Serif 400
+                 is visually heavier than Cinzel 400. Override Cinzel for the
+                 Greek unicode ranges to use Noto Serif Light (300) instead,
+                 so Greek labels (nav buttons, column headers) match the visual
+                 weight of the surrounding Cinzel letterforms. ─────────────── */
+        @font-face {
+            font-family: 'Cinzel';
+            font-weight: 400;
+            font-style: normal;
+            src: url('https://fonts.gstatic.com/s/notoserif/v33/ga6iaw1J5X9T9RW6j9bNVls-hfgvz8JcMofYTa32J4wsL2JAlAhZ9lCjwA.ttf') format('truetype');
+            unicode-range: U+0370-03FF, U+1F00-1FFF;
         }
     </style>
 </head>
