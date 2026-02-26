@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Academia">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Cinzel:wght@400;600&family=Noto+Serif:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-primary: #0f0e0c;
@@ -327,7 +327,7 @@
         }
 
         .greek-text {
-            font-family: var(--font-body);
+            font-family: 'Noto Serif', 'Palatino Linotype', Palatino, Georgia, serif;
             font-size: 17px;
             line-height: 1.9;
             color: var(--gold-pale);
@@ -599,7 +599,7 @@
         }
 
         .greek-cell {
-            font-family: var(--font-body);
+            font-family: 'Noto Serif', 'Palatino Linotype', Palatino, Georgia, serif;
             font-size: 17px;
             line-height: 1.9;
             color: var(--gold-pale);
@@ -6114,6 +6114,7 @@ Revolving such thoughts in her inflamed heart, the goddess came to Aeolia, the l
         }
 
         function makeWordClickable(text, lang) {
+            if (lang === 'greek') text = text.normalize('NFC');
             return text.split(/(\s+|<[^>]+>)/g).map(token => {
                 if (/^\s+$/.test(token) || /^</.test(token) || /^[·,;:.!?—\d]+$/.test(token)) {
                     return token;
