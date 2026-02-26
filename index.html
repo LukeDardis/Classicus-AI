@@ -402,6 +402,24 @@
 
         .dictionary-popup.active { display: block; }
 
+        .dictionary-popup::-webkit-scrollbar {
+            width: 4px;
+        }
+        .dictionary-popup::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .dictionary-popup::-webkit-scrollbar-thumb {
+            background: var(--gold-muted);
+            border-radius: 2px;
+        }
+        .dictionary-popup::-webkit-scrollbar-thumb:hover {
+            background: var(--gold);
+        }
+        .dictionary-popup {
+            scrollbar-width: thin;
+            scrollbar-color: var(--gold-muted) transparent;
+        }
+
         /* Gold gradient rule at top of popup */
         .dictionary-popup::before {
             content: '';
@@ -1396,24 +1414,24 @@
         </header>
 
         <div class="lang-switcher">
-            <button class="lang-btn active" onclick="switchMode('greek')">ἙΛΛΗΝΙΚΆ · Greek</button>
-            <button class="lang-btn" onclick="switchMode('latin')">LATINA · Latin</button>
-            <button class="lang-btn" onclick="switchMode('bible')">Novum Testamentum · The Gospels</button>
+            <button class="lang-btn active" onclick="switchMode('bible')">Novum Testamentum · The Gospels</button>
             <button class="lang-btn" onclick="switchMode('mass')">Daily Mass</button>
+            <button class="lang-btn" onclick="switchMode('greek')">ἙΛΛΗΝΙΚΆ · Greek</button>
+            <button class="lang-btn" onclick="switchMode('latin')">LATINA · Latin</button>
             <button class="lang-btn" onclick="switchMode('vocab')">Vocabulary</button>
         </div>
 
-        <!-- Greek Library -->
-        <div class="library greek-library"></div>
-
-        <!-- Latin Library -->
-        <div class="library latin-library" style="display:none;"></div>
-
         <!-- Bible Library -->
-        <div class="library bible-library" style="display:none;"></div>
+        <div class="library bible-library"></div>
 
         <!-- Mass Library -->
         <div class="library mass-library" style="display:none;"></div>
+
+        <!-- Greek Library -->
+        <div class="library greek-library" style="display:none;"></div>
+
+        <!-- Latin Library -->
+        <div class="library latin-library" style="display:none;"></div>
 
         <!-- Vocabulary Library -->
         <div class="library vocab-library" style="display:none;"></div>
@@ -1562,8 +1580,16 @@
                 for (const sections of Object.values(data)) {
                     for (const sec of sections) {
                         if (sec.language === langName && sec.definitions?.length) {
-                            const def = sec.definitions[0].definition
-                                .replace(/<[^>]+>/g, '').trim();
+                            let def = sec.definitions[0].definition
+                                .replace(/<[^>]+>/g, '')  // strip HTML tags
+                                .replace(/\s+/g, ' ')
+                                .trim();
+                            // Strip leading dialect/register labels like "(Classical)" or "(Ecclesiastical)"
+                            def = def.replace(/^\([^)]{1,40}\)\s*/g, '');
+                            // Truncate at first semicolon or after 250 chars to avoid walls of cross-reference text
+                            const semi = def.indexOf(';');
+                            if (semi > 0 && semi < 250) def = def.slice(0, semi).trim();
+                            if (def.length > 250) def = def.slice(0, 250).trimEnd() + '…';
                             _WIKT_CACHE[cacheKey] = def;
                             return def;
                         }
@@ -6052,7 +6078,9 @@ Revolving such thoughts in her inflamed heart, the goddess came to Aeolia, the l
         }
 
         function init() {
-            renderLibrary('greek');
+            currentMode = 'bible';
+            currentLang = 'greek';
+            renderBibleLibrary();
             initGamification();
         }
 
@@ -6543,11 +6571,7 @@ ${text.translation}
                     <div class="text-card" onclick="openMassReading(${i})">
                         <h3 class="text-title">${r.label}</h3>
                         <div class="text-meta">${r.source}</div>
-                        <div style="margin-top:0.5rem;">
-                            ${r.hasGreek
-                                ? '<span style="color:var(--gold);font-size:0.65rem;font-family:var(--font-ui);letter-spacing:0.1em;text-transform:uppercase;">● Greek available</span>'
-                                : '<span style="opacity:0.4;font-size:0.65rem;font-family:var(--font-ui);letter-spacing:0.1em;text-transform:uppercase;">○ English only</span>'}
-                        </div>
+                        ${r.hasGreek ? '<div style="margin-top:0.5rem;"><span style="color:var(--gold);font-size:0.65rem;font-family:var(--font-ui);letter-spacing:0.1em;text-transform:uppercase;">● Greek available</span></div>' : ''}
                         <div class="text-desc" style="margin-top:0.5rem;">${r.preview}…</div>
                     </div>
                 `).join('')}`;
@@ -6656,7 +6680,7 @@ ${text.translation}
 
             currentLang = 'greek';
             document.getElementById('reader-title').textContent =
-                reading.heading + (reading.source ? ' · ' + reading.source : '');
+                reading.label + (reading.source ? ' · ' + reading.source : '');
             document.getElementById('toggle-trans-btn').style.display = 'none';
             document.getElementById('reader').classList.add('active');
 
@@ -6690,7 +6714,7 @@ ${text.translation}
             }
 
             // ── Greek column ──────────────────────────────────────────────────
-            let leftContent;
+            let leftContent = null;
             if (readingData && readingData.greek.length) {
                 const lines = readingData.greek.map(v =>
                     `<p class="verse-para"><span class="verse-inline-num">${v.v}</span>${makeWordClickable(v.t, 'greek')}</p>`
@@ -6707,22 +6731,26 @@ ${text.translation}
                     ).join('');
                     leftContent = `<h3 class="col-heading" style="color:var(--gold-muted);">Ἑλληνικά</h3>
                         <div class="greek-text">${lines}</div>`;
-                } else {
-                    leftContent = `<h3 class="col-heading" style="color:var(--gold);">${reading.source || 'Source'}</h3>
-                        <p style="opacity:0.5;font-style:italic;font-size:0.95rem;line-height:1.8;">Greek text not available for this passage.</p>`;
                 }
+                // if no Greek found, leftContent stays null → single-column English
             }
 
             // ── English column ────────────────────────────────────────────────
-            // Always use the Universalis JSONP text (reading.rawHTML) — it's the
-            // authoritative Universalis translation. The scraped /G/ page uses a
-            // different version and verse alignment is unreliable.
             const englishParas = formatMassText(reading.rawHTML, reading.type);
             const rightContent = `<h3 class="col-heading" style="color:var(--text-secondary);">English</h3>
                 <div class="translation-text">${englishParas}</div>`;
 
-            document.getElementById('mass-greek-col').innerHTML = leftContent;
-            document.getElementById('mass-eng-col').innerHTML = rightContent;
+            if (leftContent) {
+                document.getElementById('mass-greek-col').innerHTML = leftContent;
+                document.getElementById('mass-eng-col').innerHTML = rightContent;
+            } else {
+                // No Greek — collapse to single centered column
+                document.getElementById('reader-body').innerHTML = `
+                    ${navHTML}
+                    <div style="max-width:680px; margin:0 auto;">
+                        ${rightContent}
+                    </div>`;
+            }
         }
 
         window.onload = () => { init(); loadMorphData(); };
