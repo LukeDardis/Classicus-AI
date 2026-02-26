@@ -6546,7 +6546,11 @@ ${text.translation}
             for (const { key, label } of READING_KEYS) {
                 if (!d[key]) continue;
                 const r = d[key];
-                const src = decodeHTMLEntities(r.source || '');
+                const src = decodeHTMLEntities(r.source || '')
+                    .replace(/\u00a0/g, ' ')              // non-breaking space → regular space
+                    .replace(/[\u211f\u2123\u2020\u2021]\S*/g, '')  // strip ℟3a, ℣x, †x response/versicle markers
+                    .replace(/\s{2,}/g, ' ')
+                    .trim();
                 const heading = decodeHTMLEntities(r.heading || label);
                 const rawHTML = r.text || '';
                 const preview = decodeAndStrip(rawHTML).slice(0, 150);
