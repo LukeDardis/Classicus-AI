@@ -856,20 +856,41 @@
                 padding: 1rem;
             }
 
-            .logo {
-                font-size: 1.6rem;
-                letter-spacing: 0.1em;
+            header {
+                padding: 2rem 0 1.5rem;
+                margin-bottom: 2rem;
             }
 
-            /* Stack badges below title so they don't overlap */
+            /* Stack logo and stats vertically so badges don't overlap title */
             .header-top {
                 flex-direction: column;
-                gap: 0.6rem;
+                gap: 0.75rem;
             }
 
             .header-stats {
                 position: static;
                 justify-content: center;
+            }
+
+            .logo {
+                font-size: 1.6rem;
+                letter-spacing: 0.12em;
+            }
+
+            .subtitle {
+                font-size: 0.9rem;
+            }
+
+            /* Smaller nav buttons on mobile */
+            .lang-switcher {
+                margin: 1.5rem 0 1.5rem;
+                gap: 0.5rem;
+            }
+
+            .lang-btn {
+                padding: 0.45rem 0.8rem;
+                font-size: 9px;
+                letter-spacing: 0.12em;
             }
 
             /* Keep facing columns side by side; tighten spacing and shrink text */
@@ -899,6 +920,91 @@
 
             .poetry-line {
                 margin-left: 0.5rem;
+            }
+
+            /* Reader adjustments */
+            .reader-content {
+                margin: 0;
+                padding: 1.5rem;
+                border: none;
+            }
+
+            .reader-content::before {
+                margin-bottom: 1.5rem;
+            }
+
+            .reader-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .reader-title {
+                font-size: 1.2rem;
+            }
+
+            .reader-controls {
+                gap: 0.5rem;
+                width: 100%;
+            }
+
+            .toggle-translation-btn,
+            .close-btn {
+                padding: 0.5rem 0.8rem;
+                font-size: 10px;
+            }
+
+            /* Dictionary popup responsive */
+            .dictionary-popup {
+                width: calc(100% - 1.5rem);
+                max-width: 340px;
+                right: 0.75rem;
+                bottom: 0.75rem;
+                padding: 1rem 1.25rem 1.25rem;
+            }
+        }
+
+        /* ── SMALL PHONE ──────────────────────────────────────────────── */
+        @media (max-width: 420px) {
+            .container {
+                padding: 0.75rem;
+            }
+
+            .logo {
+                font-size: 1.3rem;
+                letter-spacing: 0.08em;
+            }
+
+            .subtitle {
+                font-size: 0.8rem;
+            }
+
+            .lang-btn {
+                padding: 0.4rem 0.6rem;
+                font-size: 8px;
+            }
+
+            .reader-content {
+                padding: 1rem;
+            }
+
+            .dictionary-popup {
+                width: calc(100% - 1rem);
+                right: 0.5rem;
+                bottom: 0.5rem;
+            }
+
+            .streak-badge,
+            .forms-badge {
+                padding: 0.3rem 0.6rem;
+            }
+
+            .streak-count {
+                font-size: 0.9rem;
+            }
+
+            .streak-label {
+                font-size: 0.5rem;
             }
         }
 
