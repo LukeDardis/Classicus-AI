@@ -852,21 +852,53 @@
 
         /* ── MOBILE RESPONSIVE ──────────────────────────────────────── */
         @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .logo {
+                font-size: 1.6rem;
+                letter-spacing: 0.1em;
+            }
+
+            /* Stack badges below title so they don't overlap */
+            .header-top {
+                flex-direction: column;
+                gap: 0.6rem;
+            }
+
+            .header-stats {
+                position: static;
+                justify-content: center;
+            }
+
+            /* Keep facing columns side by side; tighten spacing and shrink text */
             .facing-text {
-                grid-template-columns: 1fr;
-                gap: 2rem;
+                grid-template-columns: 1fr 1fr;
+                gap: 0.75rem;
+                margin: 1rem 0;
             }
 
             .original-column {
-                border-right: none;
-                border-bottom: 1px solid var(--border);
-                padding-right: 0;
-                padding-bottom: 2rem;
+                padding-right: 0.75rem;
+                border-right: 1px solid var(--border);
+                border-bottom: none;
+                padding-bottom: 0;
             }
 
             .translation-column {
-                padding-left: 0;
-                padding-top: 2rem;
+                padding-left: 0.75rem;
+                padding-top: 0;
+            }
+
+            .greek-text,
+            .latin-text {
+                font-size: 13px;
+                line-height: 1.7;
+            }
+
+            .poetry-line {
+                margin-left: 0.5rem;
             }
         }
 
@@ -6257,7 +6289,9 @@ ${text.translation}
         function renderBibleReader() {
             const book = BIBLE_BOOKS.find(b => b.id === bibleBook);
             document.getElementById('reader-title').textContent = book.name + ' - Chapter ' + bibleChapter;
-            document.getElementById('toggle-trans-btn').style.display = 'none';
+            translationVisible = true;
+            document.getElementById('toggle-trans-btn').textContent = 'Hide Translation';
+            document.getElementById('toggle-trans-btn').style.display = 'block';
             
             const chapterData = BIBLE_TEXTS[bibleBook]?.[bibleChapter];
             
@@ -6336,15 +6370,21 @@ ${text.translation}
 
         function toggleTranslation() {
             translationVisible = !translationVisible;
-            const column = document.getElementById('translation-column');
             const btn = document.getElementById('toggle-trans-btn');
-            
-            if (translationVisible) {
-                column.classList.remove('hidden');
-                btn.textContent = 'Hide Translation';
+            btn.textContent = translationVisible ? 'Hide Translation' : 'Show Translation';
+
+            if (currentMode === 'bible') {
+                visibleBibleCols.english = translationVisible;
+                const enBtn = document.querySelector('.col-toggle.english-col');
+                if (enBtn) enBtn.classList.toggle('active', translationVisible);
+                updateBibleColumnVisibility();
             } else {
-                column.classList.add('hidden');
-                btn.textContent = 'Show Translation';
+                const column = document.getElementById('translation-column');
+                if (translationVisible) {
+                    column.classList.remove('hidden');
+                } else {
+                    column.classList.add('hidden');
+                }
             }
         }
 
