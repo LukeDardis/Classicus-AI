@@ -1,4 +1,4 @@
-const CACHE_NAME = 'academia-classica-v3';
+const CACHE_NAME = 'academia-classica-v4';
 const STATIC_ASSETS = [
   './',
   './index.html',
