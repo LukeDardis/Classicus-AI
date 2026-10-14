@@ -1553,9 +1553,269 @@
             src: url('https://fonts.gstatic.com/s/notoserif/v33/ga6iaw1J5X9T9RW6j9bNVls-hfgvz8JcMofYTa32J4wsL2JAlAhZ9lCjwA.ttf') format('truetype');
             unicode-range: U+0370-03FF, U+1F00-1FFF;
         }
+
+        /* ── SITE MENU (top-left ⋯): bug report, feature request, coffee ── */
+        .site-menu {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            z-index: 900;
+        }
+
+        .site-menu-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(201,168,76,0.05);
+            border: 1px solid var(--border);
+            color: var(--gold);
+            cursor: pointer;
+            transition: border-color 0.3s, background 0.3s;
+        }
+
+        .site-menu-btn:hover,
+        .site-menu-btn[aria-expanded="true"] {
+            border-color: var(--gold);
+            background: rgba(201,168,76,0.12);
+        }
+
+        .site-menu-btn:focus-visible,
+        .site-menu-item:focus-visible,
+        .feedback-close:focus-visible,
+        .feedback-submit:focus-visible {
+            outline: 1px solid var(--gold-pale);
+            outline-offset: 2px;
+        }
+
+        .site-menu-list {
+            display: none;
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            min-width: 230px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--gold);
+            box-shadow: 0 8px 40px rgba(0,0,0,0.7), inset 0 1px 0 rgba(201,168,76,0.1);
+            padding: 0.35rem 0;
+        }
+
+        .site-menu-list.open { display: block; }
+
+        .site-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            width: 100%;
+            padding: 0.7rem 1.1rem;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-family: var(--font-ui);
+            font-size: 11px;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            text-align: left;
+            text-decoration: none;
+            cursor: pointer;
+            transition: color 0.2s, background 0.2s;
+        }
+
+        .site-menu-item svg { flex-shrink: 0; color: var(--gold-muted); transition: color 0.2s; }
+
+        .site-menu-item:hover {
+            color: var(--gold-pale);
+            background: rgba(201,168,76,0.08);
+        }
+
+        .site-menu-item:hover svg { color: var(--gold); }
+
+        .site-menu-divider {
+            height: 1px;
+            margin: 0.35rem 1.1rem;
+            background: var(--border);
+        }
+
+        /* Feedback dialog */
+        .feedback-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15,14,12,0.88);
+            backdrop-filter: blur(4px);
+            z-index: 3500;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .feedback-overlay.active { display: flex; }
+
+        .feedback-card {
+            position: relative;
+            width: 100%;
+            max-width: 480px;
+            max-height: calc(100vh - 2rem);
+            overflow-y: auto;
+            background: var(--bg-secondary);
+            border: 1px solid var(--gold);
+            box-shadow: 0 8px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(201,168,76,0.1);
+            padding: 2.25rem 2.25rem 2rem;
+        }
+
+        .feedback-title {
+            font-family: var(--font-ui);
+            font-size: 1.15rem;
+            font-weight: 600;
+            letter-spacing: 0.18em;
+            color: var(--gold-pale);
+            text-transform: uppercase;
+            margin-bottom: 0.35rem;
+        }
+
+        .feedback-sub {
+            font-style: italic;
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .feedback-close {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            width: 34px;
+            height: 34px;
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-secondary);
+            font-size: 1.4rem;
+            line-height: 1;
+            cursor: pointer;
+            transition: color 0.2s, border-color 0.2s;
+        }
+
+        .feedback-close:hover { color: var(--gold-pale); border-color: var(--border); }
+
+        .feedback-label {
+            display: block;
+            font-family: var(--font-ui);
+            font-size: 10px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--gold-muted);
+            margin-bottom: 0.4rem;
+        }
+
+        .feedback-optional {
+            text-transform: none;
+            letter-spacing: 0.02em;
+            font-family: var(--font-body);
+            font-style: italic;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .feedback-input,
+        .feedback-textarea {
+            width: 100%;
+            margin-bottom: 1.25rem;
+            padding: 0.65rem 0.8rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            font-size: 1.05rem;
+            line-height: 1.5;
+            transition: border-color 0.2s;
+        }
+
+        .feedback-textarea { min-height: 150px; resize: vertical; }
+
+        .feedback-input::placeholder,
+        .feedback-textarea::placeholder { color: #8a8273; font-style: italic; }
+
+        .feedback-input:focus,
+        .feedback-textarea:focus { outline: none; border-color: var(--gold); }
+
+        .feedback-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+
+        .feedback-submit {
+            display: block;
+            width: 100%;
+            padding: 0.75rem 1.4rem;
+            background: rgba(201,168,76,0.12);
+            border: 1px solid var(--gold);
+            color: var(--gold-pale);
+            font-family: var(--font-ui);
+            font-size: 12px;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .feedback-submit:hover { background: rgba(201,168,76,0.22); }
+        .feedback-submit:disabled { opacity: 0.55; cursor: wait; }
+
+        .feedback-status {
+            min-height: 1.4em;
+            margin-top: 0.9rem;
+            text-align: center;
+            font-style: italic;
+            font-size: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .feedback-status.error { color: #e0a080; }
+
+        .feedback-done { text-align: center; padding: 1rem 0 0.5rem; }
+        .feedback-done p { color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 1.5rem; }
+
+        @media (max-width: 768px) {
+            .site-menu { top: 0.6rem; left: 0.6rem; }
+            .site-menu-btn { width: 36px; height: 36px; }
+            .feedback-card { padding: 2rem 1.25rem 1.5rem; }
+        }
     </style>
 </head>
 <body>
+
+    <!-- Site menu (top-left ⋯): bug report, feature request, Buy me a coffee -->
+    <div class="site-menu" id="site-menu">
+        <button class="site-menu-btn" id="site-menu-btn" type="button" aria-label="More options" aria-haspopup="true" aria-expanded="false" aria-controls="site-menu-list" onclick="toggleSiteMenu(event)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg>
+        </button>
+        <div class="site-menu-list" id="site-menu-list" role="menu">
+            <button class="site-menu-item" type="button" role="menuitem" onclick="openFeedback('bug')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="7" width="10" height="13" rx="5"/><path d="M9.5 7V5.5a2.5 2.5 0 0 1 5 0V7M12 11v9M3 13h4M17 13h4M4 7l3 2M20 7l-3 2M4 20l3-2M20 20l-3-2"/></svg>Report a Bug</button>
+            <button class="site-menu-item" type="button" role="menuitem" onclick="openFeedback('feature')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg>Request a Feature</button>
+            <div class="site-menu-divider" role="separator"></div>
+            <a class="site-menu-item" role="menuitem" href="https://venmo.com/u/Luke-Dardis-2" target="_blank" rel="noopener noreferrer" onclick="closeSiteMenu()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V9zM17 11h1.5a2.5 2.5 0 0 1 0 5H17M8 3c0 1.5 1 1.5 1 3M12 3c0 1.5 1 1.5 1 3"/></svg>Buy Me a Coffee</a>
+        </div>
+    </div>
+
+    <!-- Bug report / feature request dialog -->
+    <div class="feedback-overlay" id="feedback-overlay" onclick="if (event.target === this) closeFeedback()">
+        <div class="feedback-card" role="dialog" aria-modal="true" aria-labelledby="feedback-title">
+            <button class="feedback-close" type="button" aria-label="Close" onclick="closeFeedback()">&times;</button>
+            <h2 class="feedback-title" id="feedback-title">Report a Bug</h2>
+            <p class="feedback-sub" id="feedback-sub"></p>
+            <form id="feedback-form" novalidate onsubmit="submitFeedback(event)">
+                <label class="feedback-label" for="feedback-name">Name <span class="feedback-optional">(optional)</span></label>
+                <input class="feedback-input" id="feedback-name" name="name" type="text" maxlength="100" autocomplete="name" placeholder="Leave blank for anonymous">
+                <label class="feedback-label" for="feedback-message" id="feedback-message-label">Report</label>
+                <textarea class="feedback-textarea" id="feedback-message" name="message" maxlength="5000" required></textarea>
+                <input class="feedback-hp" type="text" name="_honey" id="feedback-honey" tabindex="-1" autocomplete="off" aria-hidden="true">
+                <button class="feedback-submit" id="feedback-submit" type="submit">Submit</button>
+                <p class="feedback-status" id="feedback-status" role="status" aria-live="polite"></p>
+            </form>
+            <div class="feedback-done" id="feedback-done" style="display:none;">
+                <p id="feedback-done-msg">Thank you — your message has been sent.</p>
+                <button class="back-btn" type="button" style="margin-top:0;" onclick="closeFeedback()">Close</button>
+            </div>
+        </div>
+    </div>
     <div class="container">
         <header>
             <div class="header-top">
@@ -6920,6 +7180,137 @@ ${text.translation}
                     <div style="max-width:680px; margin:0 auto;">
                         ${rightContent}
                     </div>`;
+            }
+        }
+
+
+        // ── SITE MENU: bug report, feature request, Buy me a coffee ─────────
+        // Messages are emailed via FormSubmit (formsubmit.co), since the site is
+        // static on GitHub Pages. The first submission ever triggers a one-time
+        // activation email to the address below.
+        const FEEDBACK_ENDPOINT = 'https://formsubmit.co/ajax/luke.r.dardis@gmail.com';
+
+        const FEEDBACK_KINDS = {
+            bug: {
+                title: 'Report a Bug',
+                sub: 'Something not working? Let me know what happened.',
+                label: 'Report',
+                placeholder: 'What went wrong, and what were you doing when it happened?',
+                subject: 'Academia Classica — Bug Report'
+            },
+            feature: {
+                title: 'Request a Feature',
+                sub: 'Have an idea that would make the app better?',
+                label: 'Request',
+                placeholder: 'Describe the feature you’d like to see.',
+                subject: 'Academia Classica — Feature Request'
+            }
+        };
+
+        let feedbackKind = 'bug';
+
+        function toggleSiteMenu(e) {
+            if (e) e.stopPropagation();
+            const list = document.getElementById('site-menu-list');
+            const btn = document.getElementById('site-menu-btn');
+            const open = !list.classList.contains('open');
+            list.classList.toggle('open', open);
+            btn.setAttribute('aria-expanded', String(open));
+        }
+
+        function closeSiteMenu() {
+            document.getElementById('site-menu-list').classList.remove('open');
+            document.getElementById('site-menu-btn').setAttribute('aria-expanded', 'false');
+        }
+
+        document.addEventListener('click', e => {
+            const menu = document.getElementById('site-menu');
+            if (menu && !menu.contains(e.target)) closeSiteMenu();
+        });
+
+        document.addEventListener('keydown', e => {
+            if (e.key !== 'Escape') return;
+            if (document.getElementById('feedback-overlay').classList.contains('active')) closeFeedback();
+            else closeSiteMenu();
+        });
+
+        function openFeedback(kind) {
+            closeSiteMenu();
+            feedbackKind = FEEDBACK_KINDS[kind] ? kind : 'bug';
+            const cfg = FEEDBACK_KINDS[feedbackKind];
+            document.getElementById('feedback-title').textContent = cfg.title;
+            document.getElementById('feedback-sub').textContent = cfg.sub;
+            document.getElementById('feedback-message-label').textContent = cfg.label;
+            const msg = document.getElementById('feedback-message');
+            msg.placeholder = cfg.placeholder;
+            document.getElementById('feedback-form').reset();
+            document.getElementById('feedback-form').style.display = '';
+            document.getElementById('feedback-done').style.display = 'none';
+            setFeedbackStatus('');
+            document.getElementById('feedback-submit').disabled = false;
+            document.getElementById('feedback-overlay').classList.add('active');
+            setTimeout(() => document.getElementById('feedback-name').focus(), 30);
+        }
+
+        function closeFeedback() {
+            document.getElementById('feedback-overlay').classList.remove('active');
+            document.getElementById('site-menu-btn').focus();
+        }
+
+        function setFeedbackStatus(text, isError) {
+            const el = document.getElementById('feedback-status');
+            el.textContent = text;
+            el.classList.toggle('error', !!isError);
+        }
+
+        async function submitFeedback(e) {
+            e.preventDefault();
+            const cfg = FEEDBACK_KINDS[feedbackKind];
+            const name = document.getElementById('feedback-name').value.trim();
+            const message = document.getElementById('feedback-message').value.trim();
+
+            if (!message) {
+                setFeedbackStatus('Please write your ' + cfg.label.toLowerCase() + ' before submitting.', true);
+                document.getElementById('feedback-message').focus();
+                return;
+            }
+
+            const payload = {
+                _subject: cfg.subject,
+                _template: 'table',
+                _captcha: 'false',
+                _honey: document.getElementById('feedback-honey').value,
+                Type: cfg.title.replace(/^(Report|Request) an? /, ''),
+                Name: name || 'Anonymous',
+                [cfg.label]: message,
+                Page: location.href,
+                Browser: navigator.userAgent
+            };
+
+            const btn = document.getElementById('feedback-submit');
+            btn.disabled = true;
+            setFeedbackStatus('Sending…');
+
+            try {
+                const res = await fetch(FEEDBACK_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok || String(data.success) !== 'true') {
+                    throw new Error(data.message || ('HTTP ' + res.status));
+                }
+                document.getElementById('feedback-form').style.display = 'none';
+                document.getElementById('feedback-done-msg').textContent =
+                    feedbackKind === 'bug'
+                        ? 'Thank you — your bug report has been sent.'
+                        : 'Thank you — your feature request has been sent.';
+                document.getElementById('feedback-done').style.display = '';
+            } catch (err) {
+                console.warn('Feedback submission failed:', err);
+                setFeedbackStatus('Sorry, that didn’t send. Please check your connection and try again.', true);
+                btn.disabled = false;
             }
         }
 
